@@ -246,11 +246,13 @@ footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.
    1. Config + data layer
    Talks to Supabase's PostgREST endpoint with plain fetch. No SDK, no CDN,
    no third-party script. Swapping backends means rewriting this block only.
+   Lives in the site-wide joeyd_main project; every table here is prefixed
+   start_school_. Operators are whoever public.app_access lets use 'start_school'.
    =========================================================================== */
 const CFG = {
-  url:    'https://ifowaucmvfscjxpsxhqb.supabase.co',
-  key:    'sb_publishable_NFGtTymhI0AeZ4tvcqfSBQ_vg-IVmty',
-  schema: 'startschool'
+  url: 'https://fbixruzebizpcxmaysnc.supabase.co',
+  key: 'sb_publishable_mSL0dy8OKkD1aGgfizGoDw_JXo17tIJ',
+  app: 'start_school'
 };
 
 /* sessionStorage is unavailable in sandboxed previews and throws rather than
@@ -270,26 +272,52 @@ const safeStore = (() => {
 const S = {
   profiles: [], tags: [], connections: [], blocks: [],
   contacts: {}, notes: {},
-  token: safeStore.get('sas_token'),
+  token: null,
   filters: { type:'', borough:'', district:'', tags:[], q:'' },
   loaded: false, error: null, flash: null
 };
 
-function headers(write){
-  const h = {
+/* Operator session: access token + refresh token, kept in this tab only.
+   S.token is set only while signed in as an operator. */
+let session = (() => { try { return JSON.parse(safeStore.get('sas_session')); } catch(e){ return null; } })();
+S.token = session ? session.access_token : null;
+
+function setSession(s){
+  session = s; S.token = s ? s.access_token : null;
+  if(s) safeStore.set('sas_session', JSON.stringify(s)); else safeStore.del('sas_session');
+}
+
+async function authToken(grant, body){
+  const res = await fetch(CFG.url + '/auth/v1/token?grant_type=' + grant, {
+    method:'POST', headers:{'apikey':CFG.key,'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  const d = await res.json();
+  if(!res.ok) throw new Error(d.error_description || d.msg || 'Sign-in failed.');
+  return { access_token: d.access_token, refresh_token: d.refresh_token,
+           expires_at: d.expires_at || Math.floor(Date.now()/1000) + d.expires_in };
+}
+
+// Access tokens last an hour; swap in a new one just before it runs out.
+async function freshToken(){
+  if(!session || Date.now()/1000 < session.expires_at - 60) return;
+  try{ setSession(await authToken('refresh_token', {refresh_token: session.refresh_token})); }
+  catch(e){ setSession(null); }
+}
+
+function headers(){
+  return {
     'apikey': CFG.key,
     'Authorization': 'Bearer ' + (S.token || CFG.key),
     'Content-Type': 'application/json'
   };
-  h[write ? 'Content-Profile' : 'Accept-Profile'] = CFG.schema;
-  return h;
 }
 
 async function rest(path, opts = {}){
-  const write = !!opts.method && opts.method !== 'GET';
+  await freshToken();
   const res = await fetch(CFG.url + '/rest/v1/' + path, {
     method: opts.method || 'GET',
-    headers: Object.assign(headers(write), opts.prefer ? {Prefer: opts.prefer} : {}),
+    headers: Object.assign(headers(), opts.prefer ? {Prefer: opts.prefer} : {}),
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   const text = await res.text();
@@ -306,46 +334,52 @@ const db = {
   loadPublic(){
     const scope = S.token ? '' : '&status=eq.published';
     return Promise.all([
-      rest('profiles?select=*,profile_tags(tag_id)&order=created_at.desc' + scope),
-      rest('tags?select=*&order=category,sort'),
-      rest('connections?select=*'),
-      rest('content_blocks?select=*&order=section,sort')
+      rest('start_school_profiles?select=*,profile_tags:start_school_profile_tags(tag_id)&order=created_at.desc' + scope),
+      rest('start_school_tags?select=*&order=category,sort'),
+      rest('start_school_connections?select=*'),
+      rest('start_school_content_blocks?select=*&order=section,sort')
     ]);
   },
   submit(payload){
-    return rest('rpc/submit_posting', {method:'POST', body:{payload}});
+    return rest('rpc/start_school_submit_posting', {method:'POST', body:{payload}});
   },
   removeByKey(key){
-    return rest('rpc/delete_posting', {method:'POST', body:{p_key:key}});
+    return rest('rpc/start_school_delete_posting', {method:'POST', body:{p_key:key}});
   },
   saveProfile(row){
-    if(row.id) return rest('profiles?id=eq.' + row.id, {method:'PATCH', body:row, prefer:'return=representation'});
-    return rest('profiles', {method:'POST', body:row, prefer:'return=representation'});
+    if(row.id) return rest('start_school_profiles?id=eq.' + row.id, {method:'PATCH', body:row, prefer:'return=representation'});
+    return rest('start_school_profiles', {method:'POST', body:row, prefer:'return=representation'});
   },
-  deleteProfile(id){ return rest('profiles?id=eq.' + id, {method:'DELETE'}); },
+  deleteProfile(id){ return rest('start_school_profiles?id=eq.' + id, {method:'DELETE'}); },
   setTags(id, tagIds){
-    return rest('profile_tags?profile_id=eq.' + id, {method:'DELETE'}).then(() =>
-      tagIds.length ? rest('profile_tags', {method:'POST', body: tagIds.map(t => ({profile_id:id, tag_id:t}))}) : null);
+    return rest('start_school_profile_tags?profile_id=eq.' + id, {method:'DELETE'}).then(() =>
+      tagIds.length ? rest('start_school_profile_tags', {method:'POST', body: tagIds.map(t => ({profile_id:id, tag_id:t}))}) : null);
   },
-  addConnection(row){ return rest('connections', {method:'POST', body:row, prefer:'return=representation'}); },
-  deleteConnection(id){ return rest('connections?id=eq.' + id, {method:'DELETE'}); },
-  saveBlock(row){ return rest('content_blocks?key=eq.' + encodeURIComponent(row.key), {method:'PATCH', body:row}); },
-  newBlock(row){ return rest('content_blocks', {method:'POST', body:row, prefer:'return=representation'}); },
+  addConnection(row){ return rest('start_school_connections', {method:'POST', body:row, prefer:'return=representation'}); },
+  deleteConnection(id){ return rest('start_school_connections?id=eq.' + id, {method:'DELETE'}); },
+  saveBlock(row){ return rest('start_school_content_blocks?key=eq.' + encodeURIComponent(row.key), {method:'PATCH', body:row}); },
+  newBlock(row){ return rest('start_school_content_blocks', {method:'POST', body:row, prefer:'return=representation'}); },
   loadPrivate(){
-    return Promise.all([ rest('private_contacts?select=*'), rest('admin_notes?select=*') ]);
+    return Promise.all([ rest('start_school_private_contacts?select=*'), rest('start_school_admin_notes?select=*') ]);
   },
   saveNote(id, note){
-    return rest('admin_notes', {method:'POST', body:{profile_id:id, note, updated_at:new Date().toISOString()},
+    return rest('start_school_admin_notes', {method:'POST', body:{profile_id:id, note, updated_at:new Date().toISOString()},
       prefer:'resolution=merge-duplicates'});
   },
+  isOperator(){ return rest('rpc/can_use_app', {method:'POST', body:{app_name:CFG.app}}); },
+  // Any site account can sign in; only operators get to stay signed in here.
   async signIn(email, password){
-    const res = await fetch(CFG.url + '/auth/v1/token?grant_type=password', {
-      method:'POST', headers:{'apikey':CFG.key,'Content-Type':'application/json'},
-      body: JSON.stringify({email, password})
-    });
-    const d = await res.json();
-    if(!res.ok) throw new Error(d.error_description || d.msg || 'Sign-in failed.');
-    return d.access_token;
+    setSession(await authToken('password', {email, password}));
+    if(!(await db.isOperator())){
+      await db.signOut();
+      throw new Error('That account is not an operator for this site.');
+    }
+  },
+  async signOut(){
+    const tok = S.token;
+    setSession(null);
+    if(tok) fetch(CFG.url + '/auth/v1/logout', {method:'POST',
+      headers:{'apikey':CFG.key,'Authorization':'Bearer ' + tok}}).catch(() => {});
   }
 };
 
@@ -482,8 +516,8 @@ function render(){
   if(S.error){
     v.innerHTML = `<div class="wrap"><div class="notice warn"><p><strong>Could not reach the database.</strong></p>
       <p class="small">${esc(S.error)}</p>
-      <p class="small">If this site was just set up: check that <code>startschool</code> is listed under
-      Settings → API → Exposed schemas in Supabase, and that <code>schema.sql</code> has been run.</p></div></div>`;
+      <p class="small">If this site was just set up: check that the <code>start_school_</code> migrations
+      have been pushed to the Supabase project.</p></div></div>`;
     renderAdminBar(); return;
   }
   if(!S.loaded){ v.innerHTML = `<div class="wrap"><p class="muted">Loading the board…</p></div>`; renderAdminBar(); return; }
@@ -1187,15 +1221,14 @@ function wireAdminBar(){
     const err = document.getElementById('aerr');
     err.textContent = '';
     try{
-      const tok = await db.signIn(document.getElementById('aemail').value.trim(),
-                                 document.getElementById('apass').value);
-      S.token = tok; safeStore.set('sas_token', tok);
+      await db.signIn(document.getElementById('aemail').value.trim(),
+                      document.getElementById('apass').value);
       await reload(); render();
     }catch(e){ err.textContent = e.message; }
   });
   const so = document.getElementById('asignout');
   if(so) so.addEventListener('click', async () => {
-    S.token = null; safeStore.del('sas_token');
+    await db.signOut();
     S.contacts = {}; S.notes = {};
     await reload(); render();
   });
@@ -1289,6 +1322,8 @@ function toast(msg, bad){
    =========================================================================== */
 async function reload(){
   try{
+    // A stored session whose refresh failed, or whose operator access was removed, signs out quietly.
+    if(S.token){ try{ if(!(await db.isOperator())) await db.signOut(); }catch(e){ await db.signOut(); } }
     const [profiles, tags, connections, blocks] = await db.loadPublic();
     S.profiles = profiles; S.tags = tags; S.connections = connections; S.blocks = blocks;
     S.error = null;
