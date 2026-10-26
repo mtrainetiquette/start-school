@@ -1,16 +1,1786 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Joey D</title>
-  <style>
-    html {
-      min-height: 100%;
-      background: #333 url("assets/images/garage-2.jpg") center / cover no-repeat fixed;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StartSchool.nyc: find the people who want the school you want</title>
+<meta name="description" content="A free community board for New Yorkers who want to start, join, or find a new public school.">
+<meta name="referrer" content="no-referrer">
+<style>
+/* Caveat (SIL OFL, fonts/OFL.txt), served from this site: no font CDN. */
+@font-face{font-family:"Caveat";font-weight:600;font-display:swap;src:url("fonts/caveat-latin-600.woff2") format("woff2")}
+@font-face{font-family:"Caveat";font-weight:700;font-display:swap;src:url("fonts/caveat-latin-700.woff2") format("woff2")}
+/* ===========================================================================
+   Tokens
+   Palette: deep blue page, index-card slate cards, ochre signal, chalk green, brick.
+   Type:    Palatino for display (bookish, civic, not Georgia-default)
+            system sans for reading, monospace for codes (DBNs and district
+            numbers really are codes).
+   Colors are set twice: once for text on the deep blue page, and again for
+   anything sitting on a light card. Components only use --ink, --line, etc.,
+   so they read correctly in either place. --surface is "the color behind me".
+   =========================================================================== */
+:root{
+  --deep:#0E2A4A;
+  --deep-2:#143A63;
+  --card:#F4F6F0;
+
+  --ink:#EEF2F6;
+  --ink-2:#A9BACB;
+  --line:#ffffff26;
+  --line-2:#ffffff4a;
+  --ochre:#E0AE34;
+  --ochre-ink:#E9BE5A;
+  --green:#7FD1B9;
+  --brick:#F29A7E;
+  --surface:var(--deep);
+
+  --display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Charter,ui-serif,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace;
+  --hand:"Caveat","Palatino Linotype",Palatino,ui-serif,serif;
+
+  --wrap:64rem;
+  --gap:1.5rem;
+}
+/* light-card context */
+.door,.note,.sheet,.nfilter,main.cork,.empty,.notice,.admin-panel,.block-edit,.district-index,.leaflet-popup,
+input,select,textarea{
+  --ink:#12232E;
+  --ink-2:#4E6069;
+  --line:#BFC6B9;
+  --line-2:#8E9A8C;
+  --ochre:#A8770B;
+  --ochre-ink:#7A5606;
+  --green:#0D5A4B;
+  --brick:#8A2C11;
+  --surface:var(--card);
+  color:var(--ink);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--deep);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.6;
+}
+a{color:var(--ink);text-decoration-color:var(--ochre);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.15;margin:0}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.5rem,3.2vw,2.1rem);letter-spacing:-.01em}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+hr{border:0;border-top:1px solid var(--line);margin:2.5rem 0}
+code{font-family:var(--mono);font-size:.9em;background:#7f7f7f26;padding:.1em .35em}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 1.25rem}
+.eyebrow{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 .6rem;
+}
+.lede{font-size:1.15rem;max-width:44ch}
+.muted{color:var(--ink-2)}
+.small{font-size:.85rem}
+.hidden{display:none !important}
+
+/* ---- header + tabs ---- */
+.masthead{border-bottom:1px solid var(--line-2);background:var(--deep)}
+.masthead .wrap{display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem 1.25rem;padding-top:1.1rem;padding-bottom:.6rem}
+.brand{font-family:var(--display);font-size:1.35rem;letter-spacing:-.01em;text-decoration:none}
+.brand b{font-weight:400;border-bottom:3px solid var(--ochre)}
+.brand span{color:var(--ink-2)}
+.tagline{font-size:.82rem;color:var(--ink-2);margin-left:auto}
+nav.tabs{border-bottom:1px solid var(--line-2);background:var(--deep-2)}
+nav.tabs .wrap{display:flex;gap:0;overflow-x:auto;padding:0 1.25rem}
+nav.tabs a{
+  font-family:var(--mono);font-size:.76rem;letter-spacing:.09em;text-transform:uppercase;
+  padding:.85rem 1rem;text-decoration:none;white-space:nowrap;color:var(--ink-2);
+  border-bottom:3px solid transparent;margin-bottom:-1px;
+}
+nav.tabs a:hover{color:var(--ink);background:#0000000a}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ochre)}
+nav.tabs a .pip{
+  display:inline-block;background:#B4441F;color:#fff;
+  border-radius:99px;padding:0 .4em;margin-left:.5em;font-size:.9em;
+}
+
+main{padding:2.5rem 0 4rem;min-height:60vh}
+main.bleed{padding-top:0}
+section.slab{margin:0 0 3rem}
+
+/* ---- start: full-screen photo with the NYCPS call for leaders ---- */
+/* --hero-drop pushes the quote down past the fold: 6 lines of the quote's type (~2rem each) */
+.hero{--hero-drop:12rem;position:relative;margin:0;
+  min-height:calc(100vh - 7.5rem + var(--hero-drop));min-height:calc(100svh - 7.5rem + var(--hero-drop));
+  display:flex;align-items:flex-end;overflow:hidden;background:var(--deep-2)}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#0e2a4a1a 0%,#0e2a4a8c 45%,#0e2a4af2 100%),
+             linear-gradient(270deg,#0e2a4a8c 0%,transparent 60%)}
+.hero-body{position:relative;z-index:1;width:100%;padding-top:8rem;padding-bottom:2.25rem;
+  display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.hero blockquote{margin:0;max-width:46rem}
+.hero blockquote p{font-family:var(--display);font-size:clamp(1.05rem,1.9vw,1.32rem);line-height:1.55;
+  color:#fff;text-shadow:0 1px 14px #00000059}
+.hero cite{font-style:normal;font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+.hero cite a{color:#fff}
+.hero figcaption{font-size:.74rem;color:var(--ink-2);margin-top:2rem;max-width:46rem}
+.hero figcaption a{color:var(--ink-2)}
+
+/* ---- district map ---- */
+.ssmap{height:70vh;min-height:26rem;border:1px solid var(--line-2);background:var(--deep-2)}
+.ssmap .leaflet-container{background:var(--deep-2)}
+.findd{max-width:42rem;margin:0 0 1.25rem}
+.findd .row{display:flex;gap:.5rem}
+.findd .row input{flex:1}
+.leaflet-popup-content{font-family:var(--sans);font-size:.88rem;line-height:1.45}
+.leaflet-popup-content h3{font-size:1.05rem;margin:0 0 .4rem}
+.leaflet-popup-content ul{margin:.3rem 0 .6rem;padding-left:1.1rem}
+details.dlist{margin-top:1.5rem}
+details.dlist summary{cursor:pointer;font-size:.9rem;color:var(--ink-2);margin-bottom:1rem}
+
+/* ---- the district list (under the map) ---- */
+.district-index{border:1px solid var(--line-2);background:var(--card);padding:1.25rem}
+.di-row{display:grid;grid-template-columns:7.5rem 1fr;gap:.75rem;align-items:start;padding:.55rem 0}
+.di-row + .di-row{border-top:1px solid var(--line)}
+.di-boro{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-2);padding-top:.55rem;
+}
+.di-cells{display:flex;flex-wrap:wrap;gap:.4rem}
+.cell{
+  font-family:var(--mono);width:3.1rem;height:3.1rem;border:1px solid var(--line-2);
+  background:transparent;color:var(--ink-2);cursor:pointer;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;
+}
+.cell .n{font-size:1rem}
+.cell .c{font-size:.62rem;color:var(--line-2)}
+.cell:hover{border-color:var(--ochre);color:var(--ink)}
+.cell.has{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.cell.has .c{color:#ffffffb0}
+.cell.has:hover{background:var(--ochre-ink);border-color:var(--ochre-ink)}
+.cell[aria-pressed="true"]{outline:3px solid var(--ochre);outline-offset:2px}
+
+/* ---- doors: headers only until opened ---- */
+.doors{display:grid;gap:1rem;align-items:start}
+@media(min-width:52rem){.doors{grid-template-columns:repeat(3,1fr)}}
+.door{background:var(--card);border-left:4px solid var(--ochre)}
+.door-head{
+  font:inherit;color:inherit;background:none;border:0;cursor:pointer;width:100%;text-align:left;
+  padding:1.2rem 1.4rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.door-head:hover{background:#0000000a}
+.door-plus{font-family:var(--mono);font-size:1.3rem;line-height:1;color:var(--ochre-ink);flex:none}
+.door.open .door-plus{transform:rotate(45deg)}
+.door-body{display:grid;grid-template-rows:0fr}
+.door.open .door-body{grid-template-rows:1fr}
+.door-inner{overflow:hidden}
+.door-inner > div{padding:0 1.4rem 1.4rem}
+.door p{font-size:.94rem;color:var(--ink-2)}
+
+/* ---- buttons ---- */
+.btn{
+  font:inherit;font-size:.92rem;padding:.6rem 1.1rem;cursor:pointer;
+  border:1px solid var(--ink);background:transparent;color:var(--ink);
+  display:inline-block;text-decoration:none;
+}
+.btn:hover{background:var(--ink);color:var(--surface)}
+.btn.primary{background:var(--ochre);border-color:var(--ochre);color:#12232E;font-weight:600}
+.btn.primary:hover{background:var(--ochre-ink);border-color:var(--ochre-ink);color:var(--surface)}
+.btn.quiet{border-color:var(--line-2);color:var(--ink-2);font-size:.82rem;padding:.35rem .7rem}
+.btn.quiet:hover{background:var(--ink-2);color:var(--surface)}
+.btn.danger{border-color:var(--brick);color:var(--brick)}
+.btn.danger:hover{background:var(--brick);color:var(--surface)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+
+/* ---- forms ---- */
+label{display:block;font-size:.82rem;font-weight:600;margin:0 0 .3rem}
+.field{margin:0 0 1.4rem;max-width:42rem}
+.field .help{font-size:.8rem;color:var(--ink-2);margin:.35rem 0 0}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{
+  font:inherit;width:100%;padding:.55rem .65rem;background:var(--card);
+  border:1px solid var(--line-2);color:var(--ink);border-radius:0;
+}
+textarea{min-height:8rem;resize:vertical;line-height:1.55}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:2.2rem}
+.checkline{display:flex;gap:.5rem;align-items:flex-start;font-weight:400;font-size:.94rem}
+.checkline input{margin-top:.35rem;flex:none}
+
+/* ---- tag chooser + chips ---- */
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.03em;
+  border:1px solid var(--line-2);background:transparent;color:var(--ink-2);
+  padding:.28rem .55rem;cursor:pointer;
+}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.chip.static{cursor:default}
+.chip.static:hover{border-color:var(--line-2);color:var(--ink-2)}
+.taggroup{margin:0 0 .9rem}
+.taggroup > .gl{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .4rem}
+
+/* ---- the Bulletin Board: cork, post-it notes, pinned sheets ----
+   Cork, colours and tilts come from the BDL bulletin-board snippet. */
+main.cork{
+  --cork:#c9a273; --frame:#6f4526;
+  padding:2rem 0 4rem;border:14px solid var(--frame);
+  background-color:var(--cork);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(110,72,34,.20) 0 1.6px, transparent 2.4px),
+    radial-gradient(circle at 62% 48%, rgba(110,72,34,.16) 0 1.9px, transparent 2.6px),
+    radial-gradient(circle at 84% 74%, rgba(255,238,210,.22) 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 38% 82%, rgba(110,72,34,.14) 0 1.7px, transparent 2.5px),
+    linear-gradient(140deg, rgba(255,232,196,.30), rgba(150,104,54,.28));
+  background-size:39px 43px, 57px 51px, 47px 61px, 67px 59px, cover;
+  background-position:0 0, 11px 7px, 23px 17px, 5px 29px, center;
+  box-shadow:inset 0 0 60px rgba(90,58,26,.45);
+}
+main.cork .wrap{max-width:84rem}
+@media(max-width:40rem){main.cork{border-width:8px}}
+.hand{font-family:var(--hand);font-weight:700}
+.bb-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1.25rem;margin:0 0 1.25rem}
+.bb-head h2{font-size:clamp(2.5rem,5vw,3.5rem);line-height:1;color:#3b2610;margin-right:auto}
+main.cork .count{color:#4a3218}
+main.cork .btn.quiet{background:#f4f6f0d9;border-color:var(--frame);color:#3b2610}
+main.cork .btn.quiet:hover{background:#3b2610;color:#fff}
+
+/* "Narrow it down": an index card, folded shut until opened */
+.nfilter{background:#FBFAF5;box-shadow:1px 3px 10px rgba(60,40,15,.28);margin:0 0 2rem}
+.nf-bar{display:flex;align-items:center;gap:.5rem;padding-right:1rem}
+.nf-head{font:inherit;color:inherit;background:none;border:0;cursor:pointer;flex:1;min-width:0;text-align:left;
+  padding:.85rem 1.25rem;display:flex;align-items:center;gap:1rem}
+.nf-title{font-family:var(--hand);font-weight:700;font-size:1.65rem;line-height:1;flex:none}
+.nf-sum{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nf-head .door-plus{margin-left:auto}
+.nfilter.open .door-plus{transform:rotate(45deg)}
+.nfilter.open .door-body{grid-template-rows:1fr}
+.nf-inner{padding:.25rem 1.25rem 1.25rem}
+.nf-grid{display:grid;gap:0 1rem;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))}
+.nf-grid .field{margin-bottom:1rem}
+
+/* notes */
+.tone0{--tone:#fff176;--r:-1.6deg}
+.tone1{--tone:#cdebb0;--r:1.4deg}
+.tone2{--tone:#ffd0a6;--r:-.7deg}
+.tone3{--tone:#bfe0f5;--r:2.1deg}
+.tone4{--tone:#f7c5d8;--r:-2.3deg}
+.notes{display:grid;gap:2.25rem 2rem;padding:.75rem .5rem 1rem}
+.notes.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.notes.one{grid-template-columns:minmax(0,1fr)}
+@media(max-width:40rem){.notes.two{grid-template-columns:minmax(0,1fr)}}
+.note{
+  position:relative;display:block;text-decoration:none;color:var(--ink);
+  padding:1.5rem 1.35rem 1.2rem;min-height:12rem;background:var(--tone);
+  box-shadow:2px 4px 10px rgba(60,40,15,.30);transform:rotate(var(--r));
+}
+.note:hover,.note:focus-visible{transform:rotate(0deg) translateY(-3px) scale(1.015);box-shadow:3px 9px 18px rgba(60,40,15,.38);z-index:2}
+.note h3{font-family:var(--hand);font-weight:700;font-size:1.8rem;line-height:1.08;margin:.55rem 0 .4rem}
+.note .snippet{font-size:.9rem;color:#3d3a2e;margin:.3rem 0 .8rem}
+.note::after,.sheet::after{
+  content:"";position:absolute;top:-9px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #ff9a90 0 22%, #d0342c 55%, #7f1d17 100%);
+  box-shadow:0 3px 4px rgba(0,0,0,.34);pointer-events:none;
+}
+
+/* an opened note takes half the board; a second one takes the other half */
+.bb-split{display:grid;gap:2rem;align-items:start}
+@media(min-width:56rem){.bb-split{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.bb-col,.bb-rail{min-width:0}
+@media(min-width:56rem){
+  .bb-rail{position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow-y:auto;overscroll-behavior:contain;padding:0 .75rem 0 .25rem}
+}
+.rail-hint{font-family:var(--hand);font-size:1.45rem;line-height:1.2;color:#3b2610;margin:0 0 .25rem}
+.sheet{--line:#0000001f;--line-2:#00000038;
+  position:relative;background:var(--tone);padding:2rem 1.75rem 1.75rem;box-shadow:2px 8px 22px rgba(60,40,15,.36)}
+.sheet h1{font-family:var(--hand);font-weight:700;font-size:clamp(2.1rem,3.4vw,2.8rem);line-height:1.05;margin:.6rem 2rem 1rem 0}
+.sheet .prose p{white-space:pre-wrap}
+.sheet .notice{background:#ffffffa6}
+.sheet-x{position:absolute;top:.6rem;right:.75rem;width:2.1rem;height:2.1rem;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;font-size:1.6rem;line-height:1;text-decoration:none;color:#00000080}
+.sheet-x:hover{background:#00000012;color:#000}
+.meta{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:.75rem}
+.kind{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border:1px solid currentColor}
+.kind.interest{color:var(--ochre-ink)}
+.kind.educator{color:var(--green)}
+.kind.concept{color:var(--brick)}
+.kind.school{color:var(--ink-2)}
+.status-pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .45rem;background:#8A2C11;color:#fff}
+.status-pill.archived{background:#4E6069}
+
+/* ---- empty state: the growth mechanic, not a fallback ---- */
+.empty{background:var(--card);border:1px dashed var(--line-2);padding:2rem 1.5rem;text-align:left}
+.empty h3{margin-bottom:.5rem}
+.empty p{max-width:46ch;color:var(--ink-2)}
+
+/* ---- posting details (inside an opened note) ---- */
+.dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1.25rem;font-size:.92rem;margin:0 0 1.5rem}
+.dl dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding-top:.25rem}
+.dl dd{margin:0}
+.conn{border-top:1px solid var(--line);padding:.7rem 0;display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:baseline}
+.rel{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ochre-ink);flex:none}
+
+/* ---- notices ---- */
+.notice{border-left:4px solid var(--ochre);background:var(--card);padding:1rem 1.15rem;margin:0 0 1.5rem;font-size:.93rem}
+.notice.warn{border-left-color:var(--brick)}
+.notice.good{border-left-color:var(--green)}
+.notice p:last-child{margin-bottom:0}
+.keybox{font-family:var(--mono);font-size:1.05rem;background:var(--ink);color:var(--surface);padding:.6rem .8rem;display:inline-block;letter-spacing:.06em;word-break:break-all}
+
+/* ---- admin ---- */
+.adminbar{border-top:1px solid var(--line-2);margin-top:3rem}
+.adminbar .wrap{padding-top:1.25rem;padding-bottom:2rem}
+.admin-panel{border:2px solid var(--ink);background:var(--card);padding:1.25rem;margin:1rem 0}
+.admin-flag{background:#B4441F;color:#fff;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;display:inline-block}
+.adm-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:.6rem 0}
+.block-edit{border:1px solid var(--line-2);background:var(--card);padding:1rem;margin:0 0 1rem}
+footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.83rem;color:var(--ink-2)}
+
+@media (prefers-reduced-motion:no-preference){
+  .note{transition:transform .2s ease,box-shadow .2s ease}
+  .pin-in .note{animation:pin-in .5s cubic-bezier(.2,.8,.3,1.15) backwards}
+  .sheet-in{animation:sheet-in .38s ease-out backwards}
+  @keyframes pin-in{from{opacity:0;transform:translateY(-22px) rotate(calc(var(--r) * -2)) scale(.94)}to{opacity:1;transform:rotate(var(--r))}}
+  @keyframes sheet-in{from{opacity:0;transform:translateY(-12px) rotate(-1.4deg) scale(.96)}to{opacity:1;transform:none}}
+  .cell,.btn,.chip,.door-head{transition:background-color .12s ease,color .12s ease,border-color .12s ease}
+  .door-body{transition:grid-template-rows .32s ease}
+  .door-plus{transition:transform .25s ease}
+  .view-enter{animation:view-in .3s ease-out}
+  @keyframes view-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
+</style>
 </head>
 <body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="#/start"><b>StartSchool</b><span>.nyc</span></a>
+    <span class="tagline">A neighbor-run board. Not affiliated with NYCPS.</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" id="tabs"></div>
+</nav>
+
+<main id="view" tabindex="-1"></main>
+
+<div class="adminbar">
+  <div class="wrap" id="adminbar"></div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>StartSchool.nyc is an unofficial community resource. Nothing here is legal advice or official
+    guidance from the New York City Public Schools. Process details change, so check the current NYCPS
+    page before you rely on anything you read here.</p>
+    <p>No analytics. No trackers. The start page photo is hosted by The Sun, and the district map loads
+    its map library and tiles from outside services only when you open it.</p>
+  </div>
+</footer>
+
+<script>
+/* ===========================================================================
+   1. Config + data layer
+   Talks to Supabase's PostgREST endpoint with plain fetch. No SDK, no CDN,
+   no third-party script. Swapping backends means rewriting this block only.
+   Lives in the site-wide joeyd_main project; every table here is prefixed
+   start_school_. Operators are whoever public.app_access lets use 'start_school'.
+   =========================================================================== */
+const CFG = {
+  url: 'https://fbixruzebizpcxmaysnc.supabase.co',
+  key: 'sb_publishable_mSL0dy8OKkD1aGgfizGoDw_JXo17tIJ',
+  app: 'start_school'
+};
+
+/* sessionStorage is unavailable in sandboxed previews and throws rather than
+   returning null, which would take the whole page down. Degrade to in-memory:
+   the operator just gets signed out on reload. */
+const safeStore = (() => {
+  let mem = {};
+  const ok = (() => { try { sessionStorage.setItem('__t','1');
+    sessionStorage.removeItem('__t'); return true; } catch(e){ return false; } })();
+  return {
+    get: k => { try { return ok ? sessionStorage.getItem(k) : (mem[k] || null); } catch(e){ return null; } },
+    set: (k,v) => { try { ok ? sessionStorage.setItem(k,v) : (mem[k]=v); } catch(e){ mem[k]=v; } },
+    del: k => { try { ok ? sessionStorage.removeItem(k) : delete mem[k]; } catch(e){ delete mem[k]; } }
+  };
+})();
+
+const S = {
+  profiles: [], tags: [], connections: [], blocks: [],
+  contacts: {}, notes: {},
+  token: null,
+  filters: { type:'', borough:'', district:'', tags:[], q:'' },
+  loaded: false, error: null, flash: null
+};
+
+/* Operator session: access token + refresh token, kept in this tab only.
+   S.token is set only while signed in as an operator. */
+let session = (() => { try { return JSON.parse(safeStore.get('sas_session')); } catch(e){ return null; } })();
+S.token = session ? session.access_token : null;
+
+function setSession(s){
+  session = s; S.token = s ? s.access_token : null;
+  if(s) safeStore.set('sas_session', JSON.stringify(s)); else safeStore.del('sas_session');
+}
+
+async function authToken(grant, body){
+  const res = await fetch(CFG.url + '/auth/v1/token?grant_type=' + grant, {
+    method:'POST', headers:{'apikey':CFG.key,'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  const d = await res.json();
+  if(!res.ok) throw new Error(d.error_description || d.msg || 'Sign-in failed.');
+  return { access_token: d.access_token, refresh_token: d.refresh_token,
+           expires_at: d.expires_at || Math.floor(Date.now()/1000) + d.expires_in };
+}
+
+// Access tokens last an hour; swap in a new one just before it runs out.
+async function freshToken(){
+  if(!session || Date.now()/1000 < session.expires_at - 60) return;
+  try{ setSession(await authToken('refresh_token', {refresh_token: session.refresh_token})); }
+  catch(e){ setSession(null); }
+}
+
+function headers(){
+  return {
+    'apikey': CFG.key,
+    'Authorization': 'Bearer ' + (S.token || CFG.key),
+    'Content-Type': 'application/json'
+  };
+}
+
+async function rest(path, opts = {}){
+  await freshToken();
+  const res = await fetch(CFG.url + '/rest/v1/' + path, {
+    method: opts.method || 'GET',
+    headers: Object.assign(headers(), opts.prefer ? {Prefer: opts.prefer} : {}),
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
+  if(!res.ok){
+    const msg = (data && (data.message || data.hint || data.error_description)) || res.status + ' ' + res.statusText;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+const db = {
+  loadPublic(){
+    const scope = S.token ? '' : '&status=eq.published';
+    return Promise.all([
+      rest('start_school_profiles?select=*,profile_tags:start_school_profile_tags(tag_id)&order=created_at.desc' + scope),
+      rest('start_school_tags?select=*&order=category,sort'),
+      rest('start_school_connections?select=*'),
+      rest('start_school_content_blocks?select=*&order=section,sort')
+    ]);
+  },
+  submit(payload){
+    return rest('rpc/start_school_submit_posting', {method:'POST', body:{payload}});
+  },
+  suggest(message, replyTo){
+    return rest('rpc/start_school_submit_suggestion', {method:'POST', body:{p_message:message, p_reply_to:replyTo || null}});
+  },
+  removeByKey(key){
+    return rest('rpc/start_school_delete_posting', {method:'POST', body:{p_key:key}});
+  },
+  saveProfile(row){
+    if(row.id) return rest('start_school_profiles?id=eq.' + row.id, {method:'PATCH', body:row, prefer:'return=representation'});
+    return rest('start_school_profiles', {method:'POST', body:row, prefer:'return=representation'});
+  },
+  deleteProfile(id){ return rest('start_school_profiles?id=eq.' + id, {method:'DELETE'}); },
+  setTags(id, tagIds){
+    return rest('start_school_profile_tags?profile_id=eq.' + id, {method:'DELETE'}).then(() =>
+      tagIds.length ? rest('start_school_profile_tags', {method:'POST', body: tagIds.map(t => ({profile_id:id, tag_id:t}))}) : null);
+  },
+  addConnection(row){ return rest('start_school_connections', {method:'POST', body:row, prefer:'return=representation'}); },
+  deleteConnection(id){ return rest('start_school_connections?id=eq.' + id, {method:'DELETE'}); },
+  saveBlock(row){ return rest('start_school_content_blocks?key=eq.' + encodeURIComponent(row.key), {method:'PATCH', body:row}); },
+  newBlock(row){ return rest('start_school_content_blocks', {method:'POST', body:row, prefer:'return=representation'}); },
+  loadPrivate(){
+    return Promise.all([ rest('start_school_private_contacts?select=*'), rest('start_school_admin_notes?select=*') ]);
+  },
+  saveNote(id, note){
+    return rest('start_school_admin_notes', {method:'POST', body:{profile_id:id, note, updated_at:new Date().toISOString()},
+      prefer:'resolution=merge-duplicates'});
+  },
+  isOperator(){ return rest('rpc/can_use_app', {method:'POST', body:{app_name:CFG.app}}); },
+  // Any site account can sign in; only operators get to stay signed in here.
+  async signIn(email, password){
+    setSession(await authToken('password', {email, password}));
+    if(!(await db.isOperator())){
+      await db.signOut();
+      throw new Error('That account is not an operator for this site.');
+    }
+  },
+  async signOut(){
+    const tok = S.token;
+    setSession(null);
+    if(tok) fetch(CFG.url + '/auth/v1/logout', {method:'POST',
+      headers:{'apikey':CFG.key,'Authorization':'Bearer ' + tok}}).catch(() => {});
+  }
+};
+
+/* ===========================================================================
+   2. Vocabulary + helpers
+   =========================================================================== */
+const BOROUGHS = {
+  manhattan:'Manhattan', brooklyn:'Brooklyn', queens:'Queens',
+  bronx:'The Bronx', staten_island:'Staten Island', citywide:'Citywide'
+};
+// Real NYCPS community school district geography.
+const DISTRICTS = [
+  ['Manhattan',     [1,2,3,4,5,6]],
+  ['The Bronx',     [7,8,9,10,11,12]],
+  ['Brooklyn',      [13,14,15,16,17,18,19,20,21,22,23,32]],
+  ['Queens',        [24,25,26,27,28,29,30]],
+  ['Staten Island', [31]]
+];
+const TYPES = {
+  interest: {label:'Wants a school',   verb:'A family or neighbor who wants a school to exist'},
+  educator: {label:'Educator',         verb:'A teacher offering to join a founding team'},
+  concept:  {label:'School concept',   verb:'A proposed school, at any stage'},
+  school:   {label:'Existing school',  verb:'A school that already exists, as a model or an option'}
+};
+const RELATIONS = {
+  interested_in:  'is interested in',
+  would_teach_at: 'would teach at',
+  would_lead:     'would lead',
+  precedent_for:  'is a precedent for',
+  partner_of:     'is a partner of',
+  same_area:      'is in the same area as',
+  same_model:     'shares a model with'
+};
+const STAGES = {idea:'Just an idea', researching:'Researching', drafting:'Drafting a proposal',
+                submitted:'Proposal submitted', approved:'Approved'};
+
+const DETAIL_FIELDS = {
+  interest: [
+    {k:'grade_span_wanted', l:'Grade span you want', t:'text', ph:'K–6'},
+    {k:'model_wanted', l:'Kind of school', t:'text', ph:'Montessori, dual language, arts-integrated…'},
+    {k:'child_age_bands', l:'Age ranges in your household', t:'multi',
+     opts:['0–3','3–5','6–8','9–11','12–14','15–18'],
+     help:'Ranges only. Never a birthdate, a name, or a current school.'},
+    {k:'willing_to_organize', l:'I am willing to help organize', t:'bool'}
+  ],
+  educator: [
+    {k:'credentials', l:'Certifications and training', t:'text', ph:'NYS Childhood Education 1-6; AMI Elementary'},
+    {k:'years_experience', l:'Years teaching', t:'select', opts:['0–2 years','3–5 years','6–10 years','11+ years'],
+     help:'A range, not an exact figure. Exact numbers plus a subject can identify you.'},
+    {k:'open_to', l:'Open to', t:'multi', opts:['Founding team','Teaching role','Advisory']}
+  ],
+  concept: [
+    {k:'proposed_grade_span', l:'Proposed grade span', t:'text', ph:'K–6, 6–12, 9–12…'},
+    {k:'model', l:'Model', t:'text', ph:'Montessori, dual language, conflict resolution…'},
+    {k:'stage', l:'Stage', t:'select', opts:Object.values(STAGES)},
+    {k:'admissions_method', l:'Admissions method', t:'text', ph:'Zoned, screened, lottery, citywide, TBD'}
+  ],
+  school: [
+    {k:'school_name', l:'Official school name', t:'text'},
+    {k:'dbn', l:'DBN', t:'text', ph:'13K482', help:'District-Borough-Number, if it has one.'},
+    {k:'sector', l:'Sector', t:'select', opts:['NYCPS district','Charter','Independent','Other']},
+    {k:'grades_served', l:'Grades served', t:'text', ph:'PreK-5'},
+    {k:'model', l:'Model', t:'text'},
+    {k:'year_opened', l:'Year opened', t:'text'},
+    {k:'website_url', l:'Website', t:'text', ph:'https://…'},
+    {k:'what_we_learned', l:'What we learned', t:'textarea',
+     help:'The most useful field on this site. What surprised you, what took longest, what you would do differently.'}
+  ]
+};
+
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+function inlineMd(s){
+  return s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+          .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+          .replace(/`([^`]+)`/g,'<code>$1</code>')
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+                   '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+function md(src){
+  const lines = esc(src || '').split(/\r?\n/);
+  let out = '', list = false;
+  for(const raw of lines){
+    const l = raw.trim();
+    if(!l){ if(list){ out += '</ul>'; list = false; } continue; }
+    const h = l.match(/^(#{1,3})\s+(.*)$/);
+    if(h){ if(list){ out += '</ul>'; list = false; } out += `<h3>${inlineMd(h[2])}</h3>`; continue; }
+    if(/^[-*]\s+/.test(l)){ if(!list){ out += '<ul>'; list = true; } out += `<li>${inlineMd(l.replace(/^[-*]\s+/,''))}</li>`; continue; }
+    if(list){ out += '</ul>'; list = false; }
+    out += `<p>${inlineMd(l)}</p>`;
+  }
+  return out + (list ? '</ul>' : '');
+}
+function block(key){ return S.blocks.find(b => b.key === key) || {title:'', body_md:''}; }
+function blocksIn(section){ return S.blocks.filter(b => b.section === section); }
+function tagLabel(id){ const t = S.tags.find(x => x.id === id); return t ? t.label : id; }
+function tagsOf(p){ return (p.profile_tags || []).map(x => x.tag_id); }
+function profileById(id){ return S.profiles.find(p => p.id === id); }
+function snippet(s, n){ s = (s || '').replace(/\s+/g,' ').trim(); return s.length > n ? esc(s.slice(0,n)) + '…' : esc(s); }
+const PII = /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})|(\+?\d[\d\s().-]{8,}\d)/i;
+
+/* ===========================================================================
+   3. Router
+   =========================================================================== */
+const TABS = [
+  ['#/start','Start here'], ['#/board','Bulletin Board'], ['#/map','District map'],
+  ['#/post','Post something'], ['#/guide','How it works'], ['#/about','About & privacy']
+];
+
+function route(){
+  const h = location.hash.replace(/^#/,'') || '/start';
+  const parts = h.split('/').filter(Boolean);
+  const name = parts[0] === 'profile' ? 'board' : (parts[0] || 'start');   // old posting links open on the board
+  return { name, arg: parts[1] ? decodeURIComponent(parts[1]) : null };
+}
+
+function renderTabs(){
+  const r = route();
+  const pend = S.token ? S.profiles.filter(p => p.status === 'pending').length : 0;
+  document.getElementById('tabs').innerHTML = TABS.map(([href,label]) => {
+    const active = href === '#/' + r.name;
+    const pip = (href === '#/board' && pend) ? `<span class="pip">${pend}</span>` : '';
+    return `<a href="${href}"${active ? ' aria-current="page"' : ''}>${esc(label)}${pip}</a>`;
+  }).join('');
+}
+
+function go(hash){ location.hash = hash; }
+
+let lastView = null;   // animate only when the view changes, not on every filter re-render
+
+function render(){
+  renderTabs();
+  const r = route();
+  const v = document.getElementById('view');
+  if(S.error){
+    v.innerHTML = `<div class="wrap"><div class="notice warn"><p><strong>Could not reach the database.</strong></p>
+      <p class="small">${esc(S.error)}</p>
+      <p class="small">If this site was just set up: check that the <code>start_school_</code> migrations
+      have been pushed to the Supabase project.</p></div></div>`;
+    renderAdminBar(); return;
+  }
+  if(!S.loaded){ v.innerHTML = `<div class="wrap"><p class="muted">Loading…</p></div>`; renderAdminBar(); return; }
+
+  const views = {start:viewStart, board:viewBoard, map:viewMap, post:viewPost, guide:viewGuide,
+                 about:viewAbout, edit:viewEdit, remove:viewRemove};
+  const fn = views[r.name] || viewStart;
+  const bleed = fn === viewStart;   // the start photo runs edge to edge
+  // The board stays put while notes open and close; the notes and sheets animate themselves.
+  const key = fn === viewBoard ? 'board' : r.name + '/' + (r.arg || '');
+  S.entering = key !== lastView;
+  if(fn !== viewBoard) lastOpen = [];
+  v.classList.toggle('bleed', bleed);
+  v.classList.toggle('cork', fn === viewBoard);
+  v.innerHTML = bleed ? fn(r.arg) : `<div class="wrap">${fn(r.arg)}</div>`;
+  if(S.entering && fn !== viewBoard) v.firstElementChild.classList.add('view-enter');
+  lastView = key;
+  wire(r);
+  if(fn === viewMap) mountMap();
+  renderAdminBar();
+  if(S.flash){ S.flash = null; }
+}
+
+/* ===========================================================================
+   4. Views: public
+   =========================================================================== */
+const HERO_IMG = 'https://www.nysun.com/_next/image?url=https%3A%2F%2Fwp.nysun.com%2Fwp-content%2Fuploads%2F2026%2F05%2Fmamdani-schools-chancellor.jpg&w=1200&q=75';
+const NYCPS_NEW_SCHOOLS = 'https://infohub.nyced.org/in-our-schools/working-with-nycps/proposal-process-to-open-a-new-school-in-nyc-public-schools';
+const openDoors = new Set();
+
+function viewStart(){
+  const doors = [['start_parents','#/post','Post something'],
+                 ['start_educators','#/post','Post something'],
+                 ['start_leaders','#/board','See what is on the Bulletin Board']]
+    .map(([k,href,cta]) => { const b = block(k), open = openDoors.has(k); return `
+      <div class="door${open ? ' open' : ''}">
+        <button class="door-head" data-door="${k}" aria-expanded="${open}" aria-controls="door-${k}">
+          <h3>${esc(b.title)}</h3><span class="door-plus" aria-hidden="true">+</span></button>
+        <div class="door-body" id="door-${k}"${open ? '' : ' inert'}><div class="door-inner"><div>
+          ${md(b.body_md)}
+          <p><a class="btn quiet" href="${href}">${cta}</a></p>
+        </div></div></div>
+      </div>`;
+    }).join('');
+
+  return `<div>
+  <figure class="hero">
+    <img class="hero-img" src="${HERO_IMG}" alt="Schools Chancellor Kamar Samuels and Mayor Zohran Mamdani"
+      onerror="this.remove()">
+    <div class="wrap hero-body">
+      <blockquote cite="${NYCPS_NEW_SCHOOLS}">
+        <p>Chancellor Kamar H. Samuels has made reimagining the student experience one of his four pillars
+        for building trust and improving outcomes in New York City Public Schools. A key part of this vision
+        is the creation of new, high-performing, and innovative schools that redefine what’s possible for
+        students.</p>
+        <p>To bring this vision to life, we are seeking exceptional leaders with a clear, forward-thinking
+        vision for student success. Ideal candidates will have a proven track record of strong leadership,
+        instructional excellence, and the ability to cultivate a thriving school culture. These leaders will
+        be responsible for shaping the mission and vision of a new school, pioneering innovative educational
+        models, and assembling a dedicated team to build a transformative learning environment from the
+        ground up.</p>
+        <cite><a href="${NYCPS_NEW_SCHOOLS}" target="_blank" rel="noopener noreferrer">NYC Dept of Education</a></cite>
+      </blockquote>
+      <figcaption>The chancellor of New York City’s public schools, Kamar Samuels, with Mayor Zohran Mamdani
+        on March 3, 2026. Photo: Michael M. Santiago/Getty Images. Image hosted by
+        <a href="https://www.nysun.com/" target="_blank" rel="noopener noreferrer">The Sun</a>.</figcaption>
+    </div>
+  </figure>
+
+  <div class="wrap" style="padding-top:3rem">
+    <section class="slab">
+      <h2 style="margin-bottom:1.25rem">Three ways in</h2>
+      <div class="doors">${doors}</div>
+    </section>
+  </div></div>`;
+}
+
+/* ===========================================================================
+   4b. District map
+   Leaflet + Esri tiles load only when this tab is opened, so the rest of the
+   site makes no third-party requests. Boundaries are a local file
+   (districts.geojson, NYC DCP school districts, simplified).
+   =========================================================================== */
+function districtCounts(){
+  const counts = {};
+  S.profiles.filter(p => p.status === 'published').forEach(p => {
+    if(p.district) counts[p.district] = (counts[p.district] || 0) + 1;
+  });
+  return counts;
+}
+function boroughOfDistrict(d){
+  const hit = DISTRICTS.find(([b, ds]) => ds.includes(Number(d)));
+  return hit ? hit[0] : '';
+}
+
+function viewMap(){
+  const counts = districtCounts();
+  const grid = DISTRICTS.map(([boro, ds]) => `
+    <div class="di-row">
+      <div class="di-boro">${esc(boro)}</div>
+      <div class="di-cells">
+        ${ds.map(d => `<button class="cell${counts[d] ? ' has' : ''}" data-district="${d}"
+            title="District ${d}: ${counts[d] || 0} posting${counts[d] === 1 ? '' : 's'}">
+            <span class="n">${d}</span><span class="c">${counts[d] || '·'}</span></button>`).join('')}
+      </div>
+    </div>`).join('');
+
+  const offMap = S.profiles.filter(p => p.status === 'published' && !p.district).length;
+
+  return `
+  <section class="slab" style="margin-bottom:1.5rem">
+    <p class="eyebrow">Start where you live · 32 community school districts</p>
+    <h2>The district map</h2>
+    <p class="muted" style="max-width:56ch;margin:.75rem 0 1.25rem">
+      NYCPS is organized into 32 community school districts, and that is the unit that matters:
+      it is who your superintendent is, which Community Education Council you can show up to, and
+      who counts as your neighbor for this purpose. Shaded districts have postings. The rest are
+      waiting for someone.</p>
+    <form class="findd" id="findd">
+      <label for="faddr">Find your district</label>
+      <div class="row"><input type="text" id="faddr" placeholder="Street address or ZIP code" autocomplete="street-address">
+        <button class="btn" type="submit">Find</button></div>
+      <p class="help small muted" style="margin:.35rem 0 0">Your address is sent to OpenStreetMap's free
+        geocoder to place it on the map. This site never stores it.</p>
+      <p id="fout" class="small" style="margin:.5rem 0 0" aria-live="polite"></p>
+    </form>
+  </section>
+  <div id="ssmap" class="ssmap" role="region" aria-label="Map of NYC community school districts"></div>
+  ${offMap ? `<p class="small muted" style="margin-top:.75rem">${offMap} posting${offMap === 1 ? ' is' : 's are'}
+    citywide or only name a borough, so ${offMap === 1 ? 'it is' : 'they are'} not on the map.
+    <a href="#/board">See everything on the Bulletin Board</a>.</p>` : ''}
+  <details class="dlist">
+    <summary>Or pick a district from a list</summary>
+    <div class="district-index">${grid}</div>
+  </details>`;
+}
+
+let leafletReady = null, districtGeo = null, mapObj = null;
+
+function loadLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(!leafletReady) leafletReady = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload = resolve;
+    js.onerror = () => { leafletReady = null; reject(new Error('The map library did not load.')); };
+    document.head.appendChild(js);
+  });
+  return leafletReady;
+}
+
+async function loadDistricts(){
+  if(!districtGeo){
+    const res = await fetch('districts.geojson');
+    if(!res.ok) throw new Error('District boundaries did not load.');
+    districtGeo = await res.json();
+  }
+  return districtGeo;
+}
+
+function districtStyle(d, counts, found){
+  const n = counts[d] || 0;
+  const base = n
+    ? {fillColor:'#E0AE34', fillOpacity:Math.min(.3 + n * .1, .7), color:'#E0AE34', weight:1.5}
+    : {fillColor:'#ffffff', fillOpacity:.04, color:'#ffffff8c', weight:.8};
+  return d === found ? Object.assign(base, {color:'#ffffff', weight:3}) : base;
+}
+
+function districtPopup(d){
+  const posts = S.profiles.filter(p => p.status === 'published' && Number(p.district) === d);
+  const list = posts.slice(0,6).map(p => `<li><a href="#/profile/${esc(p.id)}">${esc(p.title)}</a></li>`).join('');
+  return `<h3>District ${d}</h3><p class="small muted" style="margin:0">${esc(boroughOfDistrict(d))}</p>
+    ${posts.length ? `<ul>${list}</ul>` : '<p style="margin:.5rem 0">Nobody has posted here yet.</p>'}
+    <a class="btn quiet" href="${posts.length ? '#/board' : '#/post'}" data-popdist="${posts.length ? d : ''}">
+      ${posts.length ? `See ${posts.length === 1 ? 'it' : 'all ' + posts.length} on the Bulletin Board` : 'Be the first'}</a>`;
+}
+
+// Even-odd ray cast across every ring, so holes and islands both work.
+function inRing(pt, ring){
+  let inside = false;
+  for(let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function districtAt(lng, lat){
+  for(const f of districtGeo.features){
+    const g = f.geometry, polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    if(polys.some(rings => rings.reduce((acc, r) => acc !== inRing([lng, lat], r), false))) return f.properties.district;
+  }
+  return null;
+}
+
+async function mountMap(){
+  const el = document.getElementById('ssmap');
+  try{ await Promise.all([loadLeaflet(), loadDistricts()]); }
+  catch(e){
+    el.innerHTML = `<div class="notice warn" style="margin:1rem"><p>${esc(e.message)} The list below
+      still works.</p></div>`;
+    return;
+  }
+  if(!document.body.contains(el)) return;   // navigated away while loading
+  if(mapObj) mapObj.remove();
+
+  const counts = districtCounts();
+  let found = null, pin = null;
+  mapObj = L.map(el, {scrollWheelZoom:false, zoomSnap:.25});
+  // Esri Dark Gray Canvas (no key). Street labels sit above the district shading.
+  const esri = 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+  L.tileLayer(esri + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution:'Tiles © <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © OpenStreetMap contributors · Districts: NYC DCP',
+    maxZoom:16
+  }).addTo(mapObj);
+  mapObj.createPane('labels');
+  mapObj.getPane('labels').style.zIndex = 450;
+  mapObj.getPane('labels').style.pointerEvents = 'none';
+  L.tileLayer(esri + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {pane:'labels', maxZoom:16}).addTo(mapObj);
+
+  const layer = L.geoJSON(districtGeo, {
+    style: f => districtStyle(f.properties.district, counts, found),
+    onEachFeature: (f, lyr) => {
+      const d = f.properties.district;
+      lyr.bindTooltip('District ' + d, {sticky:true, direction:'top'});
+      lyr.bindPopup(() => districtPopup(d), {maxWidth:260});
+      lyr.on('mouseover', () => lyr.setStyle({fillOpacity:counts[d] ? .6 : .14}));
+      lyr.on('mouseout', () => layer.resetStyle(lyr));
+    }
+  }).addTo(mapObj);
+  mapObj.fitBounds(layer.getBounds(), {padding:[12,12]});
+
+  document.getElementById('findd').addEventListener('submit', async e => {
+    e.preventDefault();
+    const out = document.getElementById('fout');
+    const q = document.getElementById('faddr').value.trim();
+    if(!q) return;
+    out.textContent = 'Looking that up…';
+    try{
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us' +
+        '&viewbox=-74.26,40.92,-73.69,40.49&bounded=1&q=' + encodeURIComponent(q + ', New York City'),
+        {referrerPolicy:'origin'});
+      const hit = (await res.json())[0];
+      const d = hit && districtAt(Number(hit.lon), Number(hit.lat));
+      if(!d){ out.textContent = 'Could not place that address in a NYC school district. Try adding the borough or ZIP code.'; return; }
+      found = d;
+      layer.setStyle(f => districtStyle(f.properties.district, counts, found));
+      if(pin) pin.remove();
+      pin = L.circleMarker([hit.lat, hit.lon], {radius:6, color:'#fff', weight:2, fillColor:'#B4441F', fillOpacity:1}).addTo(mapObj);
+      const lyr = layer.getLayers().find(l => l.feature.properties.district === d);
+      mapObj.flyToBounds(lyr.getBounds(), {padding:[30,30], duration:.6});
+      lyr.openPopup();
+      out.textContent = `That address is in District ${d} (${boroughOfDistrict(d)}).`;
+    }catch(err){ out.textContent = 'The address lookup is not responding right now. Try the list below.'; }
+  });
+}
+
+// Popup links set the board's district filter on their way there.
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-popdist]');
+  if(a && a.dataset.popdist) S.filters = {type:'', borough:'', district:a.dataset.popdist, tags:[], q:''};
+});
+
+function filterProfiles(){
+  const f = S.filters;
+  const q = f.q.trim().toLowerCase();
+  return S.profiles.filter(p => {
+    if(!S.token && p.status !== 'published') return false;
+    if(f.type && p.type !== f.type) return false;
+    if(f.borough && p.borough !== f.borough) return false;
+    if(f.district && String(p.district) !== String(f.district)) return false;
+    if(f.tags.length){ const t = tagsOf(p); if(!f.tags.every(x => t.includes(x))) return false; }
+    if(q){
+      const hay = [p.title, p.body, p.display_name, p.neighborhood, JSON.stringify(p.details)].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function filterSummary(){
+  const f = S.filters, bits = [];
+  if(f.type) bits.push(TYPES[f.type].label.toLowerCase());
+  if(f.district) bits.push('District ' + f.district);
+  else if(f.borough) bits.push(BOROUGHS[f.borough]);
+  f.tags.forEach(t => bits.push(tagLabel(t).toLowerCase()));
+  return bits;
+}
+
+/* The Bulletin Board.
+   #/board            every note, two across
+   #/board/A          note A opened on the left, the rest one across on the right
+   #/board/A,B        A and B side by side to compare
+   #/profile/A        old links; same as #/board/A */
+let filtersOpen = false;
+let lastOpen = [];     // sheets already on screen don't replay their animation
+
+function openIds(arg){ return (arg || '').split(',').filter(id => profileById(id)).slice(0,2); }
+function boardHref(ids){ return '#/board' + (ids.length ? '/' + ids.map(encodeURIComponent).join(',') : ''); }
+// Note colour and tilt follow the posting's place in the full list, so a note keeps them when opened.
+function noteTone(p){ return S.profiles.indexOf(p) % 5; }
+
+function filterPanel(){
+  const f = S.filters;
+  const active = f.type || f.borough || f.district || f.tags.length || f.q;
+  const summary = filterSummary().concat(f.q ? ['“' + f.q + '”'] : []);
+  const tagGroups = ['theme','grades','seeking'].map(cat => {
+    const gs = S.tags.filter(t => t.category === cat);
+    if(!gs.length) return '';
+    const names = {theme:'Model', grades:'Grades', seeking:'Looking for'};
+    return `<div class="taggroup"><p class="gl">${names[cat]}</p><div class="chips">
+      ${gs.map(t => `<button class="chip" data-tag="${esc(t.id)}" aria-pressed="${f.tags.includes(t.id)}">${esc(t.label)}</button>`).join('')}
+    </div></div>`;
+  }).join('');
+
+  return `
+  <section class="nfilter${filtersOpen ? ' open' : ''}">
+    <div class="nf-bar">
+      <button class="nf-head" id="nftoggle" aria-expanded="${filtersOpen}" aria-controls="nfbody">
+        <span class="nf-title">Narrow it down</span>
+        ${summary.length ? `<span class="nf-sum">${esc(summary.join(' · '))}</span>` : ''}
+        <span class="door-plus" aria-hidden="true">+</span>
+      </button>
+      ${active ? `<button class="btn quiet" id="clearf">Clear</button>` : ''}
+    </div>
+    <div class="door-body" id="nfbody"${filtersOpen ? '' : ' inert'}><div class="door-inner"><div class="nf-inner">
+      <div class="nf-grid">
+        <div class="field"><label for="fq">Search</label>
+          <input type="text" id="fq" value="${esc(f.q)}" placeholder="Montessori, Sunset Park…"></div>
+        <div class="field"><label for="ftype">Kind of posting</label>
+          <select id="ftype"><option value="">All kinds</option>
+          ${Object.entries(TYPES).map(([k,v]) => `<option value="${k}"${f.type === k ? ' selected' : ''}>${esc(v.label)}</option>`).join('')}
+          </select></div>
+        <div class="field"><label for="fboro">Borough</label>
+          <select id="fboro"><option value="">Anywhere</option>
+          ${Object.entries(BOROUGHS).map(([k,v]) => `<option value="${k}"${f.borough === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}
+          </select></div>
+        <div class="field"><label for="fdist">District</label>
+          <select id="fdist"><option value="">Any district</option>
+          ${DISTRICTS.flatMap(([b,ds]) => ds).sort((a,b) => a-b)
+            .map(d => `<option value="${d}"${String(f.district) === String(d) ? ' selected' : ''}>District ${d}</option>`).join('')}
+          </select></div>
+      </div>
+      ${tagGroups}
+    </div></div></div>
+  </section>`;
+}
+
+function viewBoard(arg){
+  const open = openIds(arg);
+  const missing = arg && !open.length;
+  const list = filterProfiles().filter(p => !open.includes(p.id));
+  const f = S.filters;
+  const active = f.type || f.borough || f.district || f.tags.length || f.q;
+  const total = filterProfiles().length;
+
+  const head = `
+  <div class="bb-head">
+    <h2 class="hand">The Bulletin Board</h2>
+    <span class="count">${total} posting${total === 1 ? '' : 's'}${active ? ' matching' : ''}</span>
+    <a class="btn quiet" href="#/post">Add yours</a>
+  </div>
+  ${missing ? `<div class="notice warn"><p>That posting is not here. It may have been removed by the person who wrote it.</p></div>` : ''}
+  ${filterPanel()}`;
+
+  const notes = (cls, ps) => ps.length
+    ? `<div class="notes ${cls}${S.entering ? ' pin-in' : ''}">${ps.map((p, i) => noteHtml(p, i, open)).join('')}</div>`
+    : emptyHtml();
+
+  let body;
+  if(open.length === 2){
+    body = `<div class="bb-split">${open.map(id => sheetCol(profileById(id), open)).join('')}</div>`;
+  } else if(open.length === 1){
+    body = `<div class="bb-split">${sheetCol(profileById(open[0]), open)}
+      <div class="bb-rail"><p class="rail-hint">Pick another note to compare it side by side.</p>${notes('one', list)}</div></div>`;
+  } else {
+    body = notes('two', list);
+  }
+  lastOpen = open;
+  return head + body;
+}
+
+function noteHtml(p, i, open){
+  const t = tagsOf(p).slice(0,3);
+  const place = p.district ? 'District ' + p.district : (p.borough ? BOROUGHS[p.borough] : 'Location not given');
+  return `<a class="note tone${noteTone(p)}" href="${boardHref(open.concat(p.id))}" style="animation-delay:${Math.min(i, 12) * 45}ms">
+    <span class="kind ${p.type}">${esc(TYPES[p.type].label)}</span>
+    ${p.status !== 'published' ? `<span class="status-pill ${p.status}">${esc(p.status)}</span>` : ''}
+    <h3>${esc(p.title)}</h3>
+    <p class="snippet">${snippet(p.body, 160)}</p>
+    <div class="meta"><span>${esc(place)}</span><span>${esc(p.display_name)}</span>
+      ${t.length ? `<span>${t.map(x => esc(tagLabel(x))).join(' · ')}</span>` : ''}</div>
+  </a>`;
+}
+
+function emptyHtml(){
+  const bits = filterSummary();
+  const phrase = bits.length ? bits.join(', ') : 'these filters';
+  return `<div class="empty">
+    <h3>Nobody has posted ${bits.length ? 'about ' + esc(phrase) : 'anything matching this'} yet.</h3>
+    <p>That is not a dead end: it is the most useful thing this site can tell you. A school gets
+    built when demand becomes visible, and right now this corner of the board is invisible.
+    Be the first posting here and give the next person something to find.</p>
+    <p style="margin-top:1.25rem"><a class="btn primary" href="#/post">Be the first</a></p>
+  </div>`;
+}
+
+// An opened note, plus the operator tools under it when signed in.
+function sheetCol(p, open){
+  const fresh = !lastOpen.includes(p.id);
+  return `<div class="bb-col">${sheetHtml(p, open, fresh)}${S.token ? adminProfileExtras(p) : ''}</div>`;
+}
+
+function sheetHtml(p, open, fresh){
+  const d = p.details || {};
+  const fields = (DETAIL_FIELDS[p.type] || []).filter(f => {
+    const v = d[f.k]; return v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && !v.length);
+  }).map(f => {
+    let v = d[f.k];
+    if(Array.isArray(v)) v = v.join(', ');
+    if(f.t === 'bool') v = v ? 'Yes' : 'No';
+    if(f.k === 'website_url') return `<dt>${esc(f.l)}</dt><dd><a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a></dd>`;
+    return `<dt>${esc(f.l)}</dt><dd>${esc(v)}</dd>`;
+  }).join('');
+
+  const tags = tagsOf(p);
+  // A connection opens next to this note, replacing whichever note is not this one.
+  const links = S.connections.filter(c => c.from_profile === p.id || c.to_profile === p.id).map(c => {
+    const out = c.from_profile === p.id;
+    const other = profileById(out ? c.to_profile : c.from_profile);
+    if(!other) return '';
+    return `<div class="conn"><span class="rel">${esc(out ? RELATIONS[c.relation] : '← ' + RELATIONS[c.relation])}</span>
+      <a href="${boardHref([p.id, other.id])}">${esc(other.title)}</a>
+      ${c.note ? `<span class="small muted">${esc(c.note)}</span>` : ''}</div>`;
+  }).join('');
+
+  const place = [p.neighborhood, p.district ? 'District ' + p.district : '', p.borough ? BOROUGHS[p.borough] : '']
+    .filter(Boolean).join(' · ');
+
+  return `
+  <article class="sheet tone${noteTone(p)}${fresh ? ' sheet-in' : ''}">
+    <a class="sheet-x" href="${boardHref(open.filter(id => id !== p.id))}" aria-label="Close this note">×</a>
+    <span class="kind ${p.type}">${esc(TYPES[p.type].label)}</span>
+    ${p.status !== 'published' ? `<span class="status-pill ${p.status}">${esc(p.status)}</span>` : ''}
+    <h1>${esc(p.title)}</h1>
+    <dl class="dl">
+      <dt>Posted by</dt><dd>${esc(p.display_name)}</dd>
+      ${place ? `<dt>Where</dt><dd>${esc(place)}</dd>` : ''}
+      ${fields}
+      ${p.verified_at ? `<dt>Details checked</dt><dd>${esc(p.verified_at)}</dd>` : ''}
+      <dt>Posted</dt><dd>${esc((p.created_at || '').slice(0,10))}</dd>
+    </dl>
+    <div class="prose">${md(p.body)}</div>
+    ${p.public_notes ? `<div class="notice"><p class="small"><strong>Note</strong></p>${md(p.public_notes)}</div>` : ''}
+    ${tags.length ? `<div class="chips" style="margin-top:1.25rem">${tags.map(t => `<span class="chip static">${esc(tagLabel(t))}</span>`).join('')}</div>` : ''}
+    ${links ? `<h3 style="margin:2rem 0 .25rem">Connected to</h3>${links}` : ''}
+    <p class="small muted" style="margin-top:1.75rem">There is no contact address on this note, by design.
+    If you want to reach this person, post your own and mention them. The site's operator makes
+    introductions when both sides have said they are open to it.</p>
+  </article>`;
+}
+
+function viewGuide(){
+  return `<section class="slab"><p class="eyebrow">How it works</p>
+    <h2>Proposing a new public school in New York City</h2></section>
+    ${blocksIn('guide').map(b => `<section class="slab"><h2 style="margin-bottom:.75rem">${esc(b.title)}</h2>
+      <div class="prose" style="max-width:62ch">${md(b.body_md)}</div></section>`).join('<hr>')}`;
+}
+
+function viewAbout(){
+  return `<section class="slab"><p class="eyebrow">About</p><h2>${esc(block('about_site').title)}</h2>
+    <div class="prose" style="max-width:62ch;margin-top:.75rem">${md(block('about_site').body_md)}</div></section>
+    <hr>
+    <section class="slab"><h2 style="margin-bottom:.75rem">${esc(block('about_privacy').title)}</h2>
+    <div class="prose" style="max-width:62ch">${md(block('about_privacy').body_md)}</div>
+    <p style="margin-top:1.5rem"><a class="btn quiet" href="#/remove">Remove a posting I made</a></p></section>
+    <hr>
+    <section class="slab" style="max-width:42rem">
+      <h2 style="margin-bottom:.75rem">Suggestion or question?</h2>
+      <p class="muted">It goes straight to the person who runs this site. Nothing you send here is public.</p>
+      <form id="suggform">
+        <div class="field"><label for="smsg">Your suggestion or question</label>
+          <textarea id="smsg" maxlength="4000" required></textarea></div>
+        <div class="field"><label for="sreply">An email address, if you want a reply</label>
+          <input type="email" id="sreply" maxlength="200" placeholder="Optional">
+          <p class="help">Only used to answer you.</p></div>
+        <!-- left empty by people; bots fill it in -->
+        <div class="hidden" aria-hidden="true"><label for="swebsite">Website</label>
+          <input type="text" id="swebsite" tabindex="-1" autocomplete="off"></div>
+        <div class="btnrow"><button type="submit" class="btn primary" id="ssend">Send it</button></div>
+      </form>
+      <div id="sout" style="margin-top:1rem" aria-live="polite"></div>
+    </section>`;
+}
+
+/* ===========================================================================
+   5. Posting form
+   =========================================================================== */
+let draft = {type:'interest', tags:[], details:{}};
+
+function viewPost(){
+  const t = draft.type;
+  const detail = (DETAIL_FIELDS[t] || []).map(f => fieldHtml(f, draft.details[f.k])).join('');
+  const tagGroups = ['theme','grades','seeking'].map(cat => {
+    const gs = S.tags.filter(x => x.category === cat);
+    if(cat === 'seeking' && t !== 'concept') return '';
+    const names = {theme:'What kind of school', grades:'Grades', seeking:'What this concept is looking for'};
+    return `<div class="taggroup"><p class="gl">${names[cat]}</p><div class="chips">
+      ${gs.map(x => `<button type="button" class="chip" data-dtag="${esc(x.id)}" aria-pressed="${draft.tags.includes(x.id)}">${esc(x.label)}</button>`).join('')}
+    </div></div>`;
+  }).join('');
+
+  return `
+  <section class="slab" style="max-width:44rem">
+    <p class="eyebrow">Post something</p>
+    <h2>Say what you want, or what you have.</h2>
+    <p class="lede" style="margin-top:1rem">Only three things are required: what kind of posting this is,
+    a headline, and a few sentences. Everything else is optional and you should skip anything you would
+    rather not say in public.</p>
+  </section>
+
+  <form id="postform" style="max-width:44rem">
+    <div class="field">
+      <label for="ptype">What kind of posting is this?</label>
+      <select id="ptype">${Object.entries(TYPES).map(([k,v]) =>
+        `<option value="${k}"${t === k ? ' selected' : ''}>${esc(v.verb)}</option>`).join('')}</select>
+    </div>
+
+    <div class="field">
+      <label for="pname">A name to show publicly</label>
+      <input type="text" id="pname" maxlength="80" value="${esc(draft.display_name || '')}"
+        placeholder="Nadia in Sunset Park, M.R., District 15 dad…">
+      <p class="help">This is how people will recognise you on the board, so pick something you would answer
+      to (a first name and a neighborhood works well). Initials or a nickname are completely fine.
+      <strong>If you teach, do not use your full name and do not name your school.</strong> A public post
+      about wanting to leave is readable by your principal.</p>
+    </div>
+
+    <div class="field">
+      <label for="ptitle">Headline</label>
+      <input type="text" id="ptitle" maxlength="140" value="${esc(draft.title || '')}"
+        placeholder="Want a dual-language elementary school we can walk to">
+    </div>
+
+    <div class="field">
+      <label for="pbody">Tell people more</label>
+      <textarea id="pbody" placeholder="What do you want, and why? What would you be willing to do about it?">${esc(draft.body || '')}</textarea>
+      <p class="help">Two or three sentences is plenty to start.</p>
+    </div>
+
+    <div class="field">
+      <label for="pboro">Borough</label>
+      <select id="pboro"><option value="">Rather not say</option>
+      ${Object.entries(BOROUGHS).map(([k,v]) => `<option value="${k}"${draft.borough === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="pdist">Community school district</label>
+      <select id="pdist"><option value="">Not sure / rather not say</option>
+      ${DISTRICTS.flatMap(([b,ds]) => ds).sort((a,b) => a-b)
+        .map(d => `<option value="${d}"${String(draft.district) === String(d) ? ' selected' : ''}>District ${d}</option>`).join('')}
+      </select>
+      <p class="help">If you do not know yours, leave it blank, or look it up on the <a href="#/map">district map</a>.</p>
+    </div>
+
+    <div class="field">
+      <label for="pneigh">Neighborhood</label>
+      <input type="text" id="pneigh" maxlength="80" value="${esc(draft.neighborhood || '')}" placeholder="Sunset Park">
+      <p class="help">Neighborhood is as specific as this site goes. Please do not enter an address.</p>
+    </div>
+
+    ${detail}
+    ${tagGroups}
+
+    <div class="notice warn" style="margin-top:2rem">
+      <p><strong>Before you post, two things.</strong></p>
+      <p>Everything above is <strong>public</strong>. Anyone who opens this site can read it, including
+      people you know.</p>
+      <p>Never include a child's name, birthdate, current school, or photo, here or anywhere on this site.</p>
+    </div>
+
+    <div class="field">
+      <label for="pcontact">An email address, if you want an introduction</label>
+      <input type="text" id="pcontact" maxlength="200" value="" placeholder="Optional">
+      <p class="help">This one field is <strong>not</strong> public. It is stored where only the site's
+      operator can read it, and it is used to introduce you to someone when there is someone to introduce
+      you to. Leave it blank and your posting still works: people can reply by posting their own.</p>
+    </div>
+
+    <div id="piiwarn"></div>
+    <div class="btnrow" style="margin-top:1.5rem">
+      <button type="submit" class="btn primary" id="psubmit">Post it</button>
+      <span class="small muted">Postings are checked by a person before they appear, usually within a day or two.</span>
+    </div>
+  </form>
+  <div id="postresult"></div>`;
+}
+
+function fieldHtml(f, val){
+  const id = 'd_' + f.k;
+  const help = f.help ? `<p class="help">${esc(f.help)}</p>` : '';
+  if(f.t === 'bool')
+    return `<div class="field"><label class="checkline"><input type="checkbox" id="${id}" data-dk="${f.k}"${val ? ' checked' : ''}>
+      <span>${esc(f.l)}</span></label>${help}</div>`;
+  if(f.t === 'multi')
+    return `<div class="field"><label>${esc(f.l)}</label><div class="chips">
+      ${f.opts.map(o => `<button type="button" class="chip" data-dmulti="${f.k}" data-val="${esc(o)}"
+        aria-pressed="${(val || []).includes(o)}">${esc(o)}</button>`).join('')}</div>${help}</div>`;
+  if(f.t === 'select')
+    return `<div class="field"><label for="${id}">${esc(f.l)}</label><select id="${id}" data-dk="${f.k}">
+      <option value="">—</option>${f.opts.map(o => `<option${val === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+      </select>${help}</div>`;
+  if(f.t === 'textarea')
+    return `<div class="field"><label for="${id}">${esc(f.l)}</label>
+      <textarea id="${id}" data-dk="${f.k}">${esc(val || '')}</textarea>${help}</div>`;
+  return `<div class="field"><label for="${id}">${esc(f.l)}</label>
+    <input type="text" id="${id}" data-dk="${f.k}" value="${esc(val || '')}" placeholder="${esc(f.ph || '')}">${help}</div>`;
+}
+
+function collectDraft(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  draft.details = {};   // reset: otherwise a re-submit doubles every multi-select
+  draft.display_name = g('pname'); draft.title = g('ptitle'); draft.body = g('pbody');
+  draft.borough = g('pboro'); draft.district = g('pdist'); draft.neighborhood = g('pneigh');
+  document.querySelectorAll('[data-dk]').forEach(el => {
+    const v = el.type === 'checkbox' ? el.checked : el.value.trim();
+    if(v !== '' && v !== false) draft.details[el.dataset.dk] = v;
+  });
+  document.querySelectorAll('[data-dmulti]').forEach(el => {
+    const k = el.dataset.dmulti;
+    if(!Array.isArray(draft.details[k])) draft.details[k] = [];
+    if(el.getAttribute('aria-pressed') === 'true') draft.details[k].push(el.dataset.val);
+  });
+}
+
+async function submitPosting(){
+  collectDraft();
+  const contact = (document.getElementById('pcontact').value || '').trim();
+  const warn = document.getElementById('piiwarn');
+  const publicText = [draft.title, draft.body, draft.neighborhood, draft.display_name,
+                      JSON.stringify(draft.details)].join(' ');
+  if(PII.test(publicText)){
+    warn.innerHTML = `<div class="notice warn"><p><strong>That looks like an email address or a phone number
+      in a public field.</strong></p><p>Public fields are readable by everyone. Move it into the introduction
+      field below instead, or remove it, then post again. Nothing has been saved.</p></div>`;
+    warn.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  warn.innerHTML = '';
+  const btn = document.getElementById('psubmit');
+  btn.disabled = true; btn.textContent = 'Posting…';
+  try{
+    const key = await db.submit({
+      type: draft.type, display_name: draft.display_name, title: draft.title, body: draft.body,
+      borough: draft.borough, district: draft.district, neighborhood: draft.neighborhood,
+      details: draft.details, tags: draft.tags, contact
+    });
+    document.getElementById('postform').classList.add('hidden');
+    document.getElementById('postresult').innerHTML = `
+      <div class="notice good" style="max-width:44rem">
+        <h2 style="margin-bottom:.5rem">Posted.</h2>
+        <p>A person reads every posting before it appears on the board, so give it a day or two.</p>
+        <p><strong>This is your deletion key. Copy it now: it is shown once and never again.</strong></p>
+        <p><span class="keybox">${esc(key)}</span></p>
+        <p class="small">It is the only way to remove your posting yourself. Keep it somewhere you will find it.
+        If you lose it, you will have to ask the operator.</p>
+        <p style="margin-top:1.25rem"><a class="btn quiet" href="#/board">Go to the Bulletin Board</a></p>
+      </div>`;
+    draft = {type:'interest', tags:[], details:{}};
+    await reload();
+  }catch(e){
+    warn.innerHTML = `<div class="notice warn"><p><strong>That did not save.</strong> ${esc(e.message)}</p></div>`;
+    btn.disabled = false; btn.textContent = 'Post it';
+  }
+}
+
+function viewRemove(){
+  return `<section class="slab" style="max-width:38rem">
+    <p class="eyebrow">Remove a posting</p>
+    <h2>Take your posting down</h2>
+    <p style="margin-top:1rem">Paste the deletion key you were given when you posted. This removes the
+    posting and everything attached to it permanently, including any email address you gave.</p>
+    <div class="field"><label for="rkey">Deletion key</label>
+      <input type="text" id="rkey" placeholder="18 characters" autocomplete="off">
+      <p class="help">The key identifies the posting on its own, so there is nothing else to pick.
+      This works whether or not your posting has been approved yet.</p></div>
+    <div class="btnrow"><button class="btn danger" id="rgo">Remove it permanently</button></div>
+    <div id="rout" style="margin-top:1.25rem"></div>
+  </section>`;
+}
+
+/* ===========================================================================
+   6. Admin
+   =========================================================================== */
+function renderAdminBar(){
+  const el = document.getElementById('adminbar');
+  if(!S.token){
+    el.innerHTML = `
+      <details id="admindet">
+        <summary class="small muted" style="cursor:pointer">Operator sign-in</summary>
+        <div class="admin-panel" style="max-width:26rem">
+          <div class="field"><label for="aemail">Email</label><input type="email" id="aemail" autocomplete="username"></div>
+          <div class="field"><label for="apass">Password</label><input type="password" id="apass" autocomplete="current-password"></div>
+          <div class="btnrow"><button class="btn" id="asignin">Sign in</button></div>
+          <p id="aerr" class="small" style="color:var(--brick);margin-top:.75rem"></p>
+          <p class="small muted" style="margin-top:.75rem">Your session lives in this browser tab only and
+          ends when you close it.</p>
+        </div>
+      </details>`;
+  } else {
+    const pend = S.profiles.filter(p => p.status === 'pending');
+    el.innerHTML = `
+      <p><span class="admin-flag">Signed in as operator</span></p>
+      <div class="admin-panel">
+        <div class="btnrow" style="margin-bottom:1rem">
+          <a class="btn quiet" href="#/edit/new">New profile</a>
+          <a class="btn quiet" href="#/board">Board (pending postings visible)</a>
+          <button class="btn quiet" id="atoggleblocks">Edit page copy</button>
+          <button class="btn quiet" id="asignout">Sign out</button>
+        </div>
+        <h3>Waiting for review (${pend.length})</h3>
+        ${pend.length ? pend.map(p => `
+          <div class="adm-row">
+            <span><a href="#/profile/${esc(p.id)}">${esc(p.title)}</a>
+              <span class="small muted">· ${esc(TYPES[p.type].label)} · ${esc((p.created_at||'').slice(0,10))}</span></span>
+            <span class="btnrow">
+              <button class="btn quiet" data-pub="${esc(p.id)}">Publish</button>
+              <button class="btn quiet" data-arch="${esc(p.id)}">Archive</button>
+              <button class="btn quiet" data-del="${esc(p.id)}">Delete</button>
+            </span>
+          </div>`).join('') : '<p class="small muted">Nothing waiting.</p>'}
+        <div id="blockeditor" class="hidden" style="margin-top:1.5rem"></div>
+      </div>`;
+  }
+  wireAdminBar();
+}
+
+function adminProfileExtras(p){
+  const contact = S.contacts[p.id];
+  const note = S.notes[p.id] || '';
+  const others = S.profiles.filter(x => x.id !== p.id);
+  const mine = S.connections.filter(c => c.from_profile === p.id || c.to_profile === p.id);
+  return `
+  <div class="admin-panel" data-pid="${esc(p.id)}">
+    <p><span class="admin-flag">Operator only</span></p>
+    <div class="btnrow" style="margin:1rem 0">
+      <a class="btn quiet" href="#/edit/${esc(p.id)}">Edit this profile</a>
+      ${p.status !== 'published' ? `<button class="btn quiet" data-pub="${esc(p.id)}">Publish</button>` : ''}
+      ${p.status !== 'archived' ? `<button class="btn quiet" data-arch="${esc(p.id)}">Archive</button>` : ''}
+      <button class="btn danger" data-del="${esc(p.id)}">Delete permanently</button>
+    </div>
+    <h3>Contact given at post time</h3>
+    <p class="small">${contact ? esc(contact.contact) : '<span class="muted">None given.</span>'}</p>
+    <h3 style="margin-top:1.25rem">Private notes</h3>
+    <p class="small muted">Never rendered publicly. Stored in a separate table with no anonymous access.</p>
+    <div class="field"><textarea class="admnote" aria-label="Private notes">${esc(note)}</textarea></div>
+    <div class="btnrow"><button class="btn quiet savenote">Save notes</button></div>
+
+    <h3 style="margin-top:1.75rem">Connections</h3>
+    ${mine.length ? mine.map(c => {
+      const out = c.from_profile === p.id;
+      const other = profileById(out ? c.to_profile : c.from_profile);
+      return `<div class="adm-row"><span><span class="rel">${esc(out ? RELATIONS[c.relation] : '← ' + RELATIONS[c.relation])}</span>
+        ${esc(other ? other.title : '(missing)')} ${c.note ? `<span class="small muted">· ${esc(c.note)}</span>` : ''}</span>
+        <button class="btn quiet" data-unlink="${esc(c.id)}">Unlink</button></div>`;
+    }).join('') : '<p class="small muted">No connections yet.</p>'}
+    <div style="margin-top:1rem;display:grid;gap:.6rem;max-width:34rem">
+      <select class="lrel" aria-label="Relation">${Object.entries(RELATIONS).map(([k,v]) => `<option value="${k}">This profile ${esc(v)}…</option>`).join('')}</select>
+      <select class="ltarget" aria-label="Connect to">${others.map(o => `<option value="${esc(o.id)}">${esc(o.title)}</option>`).join('')}</select>
+      <input type="text" class="lnote" placeholder="Why they are connected (optional)">
+      <div class="btnrow"><button class="btn quiet addlink">Connect</button></div>
+    </div>
+  </div>`;
+}
+
+function viewEdit(id){
+  if(!S.token) return `<div class="notice warn"><p>Sign in at the bottom of the page to edit profiles.</p></div>`;
+  const isNew = id === 'new';
+  const p = isNew ? {type:'interest', status:'pending', details:{}, profile_tags:[]} : profileById(id);
+  if(!p) return `<div class="notice warn"><p>No such profile.</p></div>`;
+  const t = p.type;
+  const sel = tagsOf(p);
+  const detail = (DETAIL_FIELDS[t] || []).map(f => fieldHtml(f, (p.details || {})[f.k])).join('');
+
+  return `
+  <p class="eyebrow">${isNew ? 'New profile' : '<a href="#/profile/' + esc(p.id) + '">← Back to profile</a>'}</p>
+  <h2>${isNew ? 'Create a profile' : 'Edit profile'}</h2>
+  <form id="editform" style="max-width:44rem;margin-top:1.5rem">
+    <input type="hidden" id="e_id" value="${esc(p.id || '')}">
+    <div class="field"><label for="e_type">Type</label>
+      <select id="e_type">${Object.entries(TYPES).map(([k,v]) => `<option value="${k}"${t === k ? ' selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+      <p class="help">Changing the type changes which fields appear. Save first if you have unsaved edits.</p></div>
+    <div class="field"><label for="e_status">Status</label>
+      <select id="e_status">${['pending','published','archived'].map(s => `<option${p.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></div>
+    <div class="field"><label for="e_name">Display name</label><input type="text" id="e_name" value="${esc(p.display_name || '')}"></div>
+    <div class="field"><label for="e_title">Headline</label><input type="text" id="e_title" value="${esc(p.title || '')}"></div>
+    <div class="field"><label for="e_body">Body</label><textarea id="e_body" style="min-height:14rem">${esc(p.body || '')}</textarea></div>
+    <div class="field"><label for="e_public">Public note</label><textarea id="e_public">${esc(p.public_notes || '')}</textarea>
+      <p class="help">Shown on the profile in a highlighted box. Good for caveats like "needs re-verification".</p></div>
+    <div class="field"><label for="e_boro">Borough</label>
+      <select id="e_boro"><option value="">—</option>${Object.entries(BOROUGHS).map(([k,v]) => `<option value="${k}"${p.borough === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></div>
+    <div class="field"><label for="e_dist">District</label>
+      <select id="e_dist"><option value="">—</option>${DISTRICTS.flatMap(([b,ds]) => ds).sort((a,b)=>a-b)
+        .map(d => `<option value="${d}"${String(p.district) === String(d) ? ' selected' : ''}>District ${d}</option>`).join('')}</select></div>
+    <div class="field"><label for="e_neigh">Neighborhood</label><input type="text" id="e_neigh" value="${esc(p.neighborhood || '')}"></div>
+    <div class="field"><label for="e_ver">Details last checked</label><input type="date" id="e_ver" value="${esc(p.verified_at || '')}">
+      <p class="help">Shown on the profile. School details go stale fast.</p></div>
+    ${detail}
+    ${['theme','grades','seeking'].map(cat => {
+      const gs = S.tags.filter(x => x.category === cat);
+      const names = {theme:'Model', grades:'Grades', seeking:'Looking for'};
+      return `<div class="taggroup"><p class="gl">${names[cat]}</p><div class="chips">
+        ${gs.map(x => `<button type="button" class="chip" data-etag="${esc(x.id)}" aria-pressed="${sel.includes(x.id)}">${esc(x.label)}</button>`).join('')}
+      </div></div>`;
+    }).join('')}
+    <div class="btnrow" style="margin-top:1.5rem">
+      <button type="submit" class="btn primary">Save profile</button>
+      ${isNew ? '' : `<button type="button" class="btn danger" data-del="${esc(p.id)}">Delete permanently</button>`}
+    </div>
+    <p id="eerr" class="small" style="color:var(--brick)"></p>
+  </form>`;
+}
+
+let editTags = null;
+
+function blockEditorHtml(){
+  return S.blocks.map(b => `
+    <div class="block-edit">
+      <div class="field"><label>Heading <span class="small muted">· <code>${esc(b.key)}</code> · ${esc(b.section)}</span></label>
+        <input type="text" data-btitle="${esc(b.key)}" value="${esc(b.title)}"></div>
+      <div class="field" style="margin-bottom:.75rem"><label>Body</label>
+        <textarea data-bbody="${esc(b.key)}" style="min-height:9rem">${esc(b.body_md)}</textarea>
+        <p class="help">Markdown: <code>**bold**</code>, <code>*italic*</code>, <code>- list</code>,
+        <code>### heading</code>, <code>[link](https://…)</code></p></div>
+      <div class="btnrow"><button class="btn quiet" data-bsave="${esc(b.key)}">Save this section</button></div>
+    </div>`).join('') + `
+    <div class="block-edit">
+      <h3>Add a new section</h3>
+      <div class="field"><label>Key</label><input type="text" id="nbkey" placeholder="guide_facilities"></div>
+      <div class="field"><label>Heading</label><input type="text" id="nbtitle"></div>
+      <div class="field"><label>Appears under</label><select id="nbsection">
+        <option value="guide">How it works</option><option value="start">Start here</option>
+        <option value="about">About &amp; privacy</option></select></div>
+      <div class="btnrow"><button class="btn quiet" id="nbadd">Add section</button></div>
+    </div>`;
+}
+
+/* ===========================================================================
+   7. Event wiring
+   =========================================================================== */
+function on(sel, ev, fn, root){ (root || document).querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn)); }
+
+function wire(r){
+  const V = document.getElementById('view');
+  const on = (sel, ev, fn) => V.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn));
+  // start page: open and close the doors
+  on('.door-head','click', e => {
+    const btn = e.currentTarget, door = btn.closest('.door'), k = btn.dataset.door;
+    const open = door.classList.toggle('open');
+    open ? openDoors.add(k) : openDoors.delete(k);
+    btn.setAttribute('aria-expanded', String(open));
+    door.querySelector('.door-body').inert = !open;
+  });
+
+  // district map: the list of district cells
+  on('.cell','click', e => {
+    const d = e.currentTarget.dataset.district;
+    S.filters = {type:'', borough:'', district:d, tags:[], q:''};
+    go('#/board');
+  });
+
+  // board filters: the panel opens and closes in place, without a re-render
+  const nft = document.getElementById('nftoggle');
+  if(nft) nft.addEventListener('click', () => {
+    const panel = nft.closest('.nfilter');
+    filtersOpen = panel.classList.toggle('open');
+    nft.setAttribute('aria-expanded', String(filtersOpen));
+    document.getElementById('nfbody').inert = !filtersOpen;
+  });
+  const bind = (id, key) => { const el = document.getElementById(id); if(el)
+    el.addEventListener('change', () => { S.filters[key] = el.value; render(); }); };
+  bind('ftype','type'); bind('fboro','borough'); bind('fdist','district');
+  const fq = document.getElementById('fq');
+  if(fq){ let t; fq.addEventListener('input', () => { clearTimeout(t);
+    t = setTimeout(() => { S.filters.q = fq.value; const pos = fq.selectionStart; render();
+      const n = document.getElementById('fq'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } }, 250); }); }
+  on('[data-tag]','click', e => {
+    const id = e.currentTarget.dataset.tag;
+    S.filters.tags = S.filters.tags.includes(id) ? S.filters.tags.filter(x => x !== id) : S.filters.tags.concat(id);
+    render();
+  });
+  const cf = document.getElementById('clearf');
+  if(cf) cf.addEventListener('click', () => { S.filters = {type:'',borough:'',district:'',tags:[],q:''}; render(); });
+
+  // posting form
+  const pt = document.getElementById('ptype');
+  if(pt) pt.addEventListener('change', () => { collectDraft(); draft.type = pt.value; draft.details = {}; render(); });
+  on('[data-dtag]','click', e => {
+    const id = e.currentTarget.dataset.dtag;
+    collectDraft();
+    draft.tags = draft.tags.includes(id) ? draft.tags.filter(x => x !== id) : draft.tags.concat(id);
+    render();
+  });
+  on('[data-dmulti]','click', e => {
+    const btn = e.currentTarget;
+    btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+  });
+  const pf = document.getElementById('postform');
+  if(pf) pf.addEventListener('submit', e => { e.preventDefault(); submitPosting(); });
+
+  // about: suggestion box
+  const sf = document.getElementById('suggform');
+  if(sf) sf.addEventListener('submit', async e => {
+    e.preventDefault();
+    const out = document.getElementById('sout'), btn = document.getElementById('ssend');
+    const thanks = `<div class="notice good"><p><strong>Thank you.</strong> It has been sent.</p></div>`;
+    if(document.getElementById('swebsite').value){ sf.classList.add('hidden'); out.innerHTML = thanks; return; }
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try{
+      await db.suggest(document.getElementById('smsg').value, document.getElementById('sreply').value);
+      sf.classList.add('hidden'); out.innerHTML = thanks;
+    }catch(err){
+      out.innerHTML = `<div class="notice warn"><p><strong>That did not send.</strong> ${esc(err.message)}</p></div>`;
+      btn.disabled = false; btn.textContent = 'Send it';
+    }
+  });
+
+  // removal by key
+  const rgo = document.getElementById('rgo');
+  if(rgo) rgo.addEventListener('click', async () => {
+    const out = document.getElementById('rout');
+    const key = document.getElementById('rkey').value.trim();
+    try{
+      const ok = await db.removeByKey(key);
+      out.innerHTML = ok
+        ? `<div class="notice good"><p>Removed. It is gone from the board and from the database, along with any email address you gave.</p></div>`
+        : `<div class="notice warn"><p>No posting matches that key. Check for a typo: keys are 18 characters, digits and the letters a to f.</p></div>`;
+      if(ok) await reload();
+    }catch(err){ out.innerHTML = `<div class="notice warn"><p>${esc(err.message)}</p></div>`; }
+  });
+
+  // admin: profile extras
+  on('.savenote','click', async e => {
+    const box = e.currentTarget.closest('[data-pid]');
+    const id = box.dataset.pid, note = box.querySelector('.admnote').value;
+    try{ await db.saveNote(id, note); S.notes[id] = note; toast('Notes saved.'); }
+    catch(e){ toast('Could not save: ' + e.message, true); }
+  });
+  on('.addlink','click', async e => {
+    const box = e.currentTarget.closest('[data-pid]'), id = box.dataset.pid;
+    try{
+      await db.addConnection({from_profile:id, to_profile:box.querySelector('.ltarget').value,
+        relation:box.querySelector('.lrel').value, note:box.querySelector('.lnote').value.trim() || null});
+      await reload(); render();
+    }catch(e){ toast('Could not connect: ' + e.message, true); }
+  });
+  on('[data-unlink]','click', async e => {
+    try{ await db.deleteConnection(e.currentTarget.dataset.unlink); await reload(); render(); }
+    catch(err){ toast(err.message, true); }
+  });
+  on('[data-pub]','click', e => setStatus(e.currentTarget.dataset.pub, 'published'));
+  on('[data-arch]','click', e => setStatus(e.currentTarget.dataset.arch, 'archived'));
+  on('[data-del]','click', async e => {
+    if(!confirm('Delete this profile permanently, including any stored contact address?')) return;
+    try{ await db.deleteProfile(e.currentTarget.dataset.del); await reload(); go('#/board'); }
+    catch(err){ toast(err.message, true); }
+  });
+
+  // admin: profile editor
+  const ef = document.getElementById('editform');
+  if(ef){
+    if(editTags === null) editTags = tagsOf(profileById(route().arg) || {profile_tags:[]});
+    on('[data-etag]','click', ev => {
+      const id = ev.currentTarget.dataset.etag;
+      editTags = editTags.includes(id) ? editTags.filter(x => x !== id) : editTags.concat(id);
+      ev.currentTarget.setAttribute('aria-pressed', String(editTags.includes(id)));
+    });
+    document.getElementById('e_type').addEventListener('change', () => { saveEdit(true); });
+    ef.addEventListener('submit', ev => { ev.preventDefault(); saveEdit(false); });
+  } else { editTags = null; }
+}
+
+function wireAdminBar(){
+  const si = document.getElementById('asignin');
+  if(si) si.addEventListener('click', async () => {
+    const err = document.getElementById('aerr');
+    err.textContent = '';
+    try{
+      await db.signIn(document.getElementById('aemail').value.trim(),
+                      document.getElementById('apass').value);
+      await reload(); render();
+    }catch(e){ err.textContent = e.message; }
+  });
+  const so = document.getElementById('asignout');
+  if(so) so.addEventListener('click', async () => {
+    await db.signOut();
+    S.contacts = {}; S.notes = {};
+    await reload(); render();
+  });
+  const tb = document.getElementById('atoggleblocks');
+  if(tb) tb.addEventListener('click', () => {
+    const box = document.getElementById('blockeditor');
+    if(box.classList.contains('hidden')){ box.innerHTML = blockEditorHtml(); box.classList.remove('hidden'); wireBlocks(); }
+    else box.classList.add('hidden');
+  });
+  on('[data-pub]','click', e => setStatus(e.currentTarget.dataset.pub, 'published'), document.getElementById('adminbar'));
+  on('[data-arch]','click', e => setStatus(e.currentTarget.dataset.arch, 'archived'), document.getElementById('adminbar'));
+  on('[data-del]','click', async e => {
+    if(!confirm('Delete this profile permanently?')) return;
+    try{ await db.deleteProfile(e.currentTarget.dataset.del); await reload(); render(); }
+    catch(err){ toast(err.message, true); }
+  }, document.getElementById('adminbar'));
+}
+
+function wireBlocks(){
+  on('[data-bsave]','click', async e => {
+    const key = e.currentTarget.dataset.bsave;
+    const title = document.querySelector(`[data-btitle="${CSS.escape(key)}"]`).value;
+    const body_md = document.querySelector(`[data-bbody="${CSS.escape(key)}"]`).value;
+    try{
+      await db.saveBlock({key, title, body_md, updated_at:new Date().toISOString()});
+      const b = block(key); b.title = title; b.body_md = body_md;
+      toast('Saved “' + title + '”.');
+    }catch(err){ toast('Could not save: ' + err.message, true); }
+  });
+  const add = document.getElementById('nbadd');
+  if(add) add.addEventListener('click', async () => {
+    const key = document.getElementById('nbkey').value.trim();
+    if(!/^[a-z0-9_]+$/.test(key)) return toast('Use lowercase letters, numbers and underscores for the key.', true);
+    try{
+      await db.newBlock({key, title:document.getElementById('nbtitle').value.trim() || key,
+        section:document.getElementById('nbsection').value, body_md:'', sort:999});
+      await reload();
+      document.getElementById('blockeditor').innerHTML = blockEditorHtml(); wireBlocks();
+      toast('Section added.');
+    }catch(err){ toast(err.message, true); }
+  });
+}
+
+async function setStatus(id, status){
+  try{ await db.saveProfile({id, status, updated_at:new Date().toISOString()}); await reload(); render(); }
+  catch(e){ toast(e.message, true); }
+}
+
+async function saveEdit(typeChangeOnly){
+  const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const details = {};
+  document.querySelectorAll('[data-dk]').forEach(el => {
+    details[el.dataset.dk] = el.type === 'checkbox' ? el.checked : el.value.trim();
+  });
+  document.querySelectorAll('[data-dmulti]').forEach(el => {
+    const k = el.dataset.dmulti;
+    if(!Array.isArray(details[k])) details[k] = [];
+    if(el.getAttribute('aria-pressed') === 'true') details[k].push(el.dataset.val);
+  });
+  const row = {
+    type:g('e_type'), status:g('e_status'), display_name:g('e_name').trim() || 'Operator',
+    title:g('e_title').trim(), body:g('e_body'), public_notes:g('e_public'),
+    borough:g('e_boro') || null, district:g('e_dist') ? Number(g('e_dist')) : null,
+    neighborhood:g('e_neigh').trim() || null, verified_at:g('e_ver') || null,
+    details, updated_at:new Date().toISOString()
+  };
+  const id = g('e_id');
+  if(id) row.id = id;
+  if(!row.title) { document.getElementById('eerr').textContent = 'A headline is required.'; return; }
+  try{
+    const res = await db.saveProfile(row);
+    const newId = (Array.isArray(res) && res[0] && res[0].id) || id;
+    await db.setTags(newId, editTags || []);
+    await reload();
+    if(typeChangeOnly){ editTags = null; go('#/edit/' + newId); render(); }
+    else { editTags = null; toast('Profile saved.'); go('#/profile/' + newId); }
+  }catch(e){ document.getElementById('eerr').textContent = e.message; }
+}
+
+function toast(msg, bad){
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;left:1rem;bottom:1rem;z-index:1500;padding:.7rem 1rem;font-size:.9rem;' +
+    'background:' + (bad ? '#8A2C11' : '#F4F6F0') + ';color:' + (bad ? '#fff' : '#12232E') + ';max-width:24rem';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+/* ===========================================================================
+   8. Boot
+   =========================================================================== */
+async function reload(){
+  try{
+    // A stored session whose refresh failed, or whose operator access was removed, signs out quietly.
+    if(S.token){ try{ if(!(await db.isOperator())) await db.signOut(); }catch(e){ await db.signOut(); } }
+    const [profiles, tags, connections, blocks] = await db.loadPublic();
+    S.profiles = profiles; S.tags = tags; S.connections = connections; S.blocks = blocks;
+    S.error = null;
+    if(S.token){
+      try{
+        const [contacts, notes] = await db.loadPrivate();
+        S.contacts = Object.fromEntries(contacts.map(c => [c.profile_id, c]));
+        S.notes = Object.fromEntries(notes.map(n => [n.profile_id, n.note]));
+      }catch(e){ /* session expired or no rows; not fatal */ }
+    }
+  }catch(e){ S.error = e.message; }
+  S.loaded = true;
+}
+
+window.addEventListener('hashchange', () => {
+  editTags = null;
+  render();
+  document.getElementById('view').focus();
+  window.scrollTo({top:0, behavior:'auto'});
+});
+
+reload().then(render);
+</script>
 </body>
 </html>
