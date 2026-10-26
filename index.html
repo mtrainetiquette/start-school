@@ -3,28 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>startaschool.nyc — find the people who want the school you want</title>
+<title>StartSchool.nyc: find the people who want the school you want</title>
 <meta name="description" content="A free community board for New Yorkers who want to start, join, or find a new public school.">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ===========================================================================
    Tokens
-   Palette: index-card slate, ink navy, ochre signal, chalk green, brick.
+   Palette: deep blue page, index-card slate cards, ochre signal, chalk green, brick.
    Type:    Palatino for display (bookish, civic, not Georgia-default)
-            system sans for reading, monospace for codes — because DBNs and
-            district numbers really are codes.
+            system sans for reading, monospace for codes (DBNs and district
+            numbers really are codes).
+   Colors are set twice: once for text on the deep blue page, and again for
+   anything sitting on a light card. Components only use --ink, --line, etc.,
+   so they read correctly in either place. --surface is "the color behind me".
    =========================================================================== */
 :root{
-  --paper:#E6E9E1;
+  --deep:#0E2A4A;
+  --deep-2:#143A63;
   --card:#F4F6F0;
-  --ink:#12232E;
-  --ink-2:#4E6069;
-  --line:#BFC6B9;
-  --line-2:#8E9A8C;
-  --ochre:#A8770B;
-  --ochre-ink:#7A5606;
-  --green:#0D5A4B;
-  --brick:#8A2C11;
+
+  --ink:#EEF2F6;
+  --ink-2:#A9BACB;
+  --line:#ffffff26;
+  --line-2:#ffffff4a;
+  --ochre:#E0AE34;
+  --ochre-ink:#E9BE5A;
+  --green:#7FD1B9;
+  --brick:#F29A7E;
+  --surface:var(--deep);
 
   --display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Charter,ui-serif,serif;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -33,11 +39,25 @@
   --wrap:64rem;
   --gap:1.5rem;
 }
+/* light-card context */
+.door,.pcard,.empty,.detail,.notice,.admin-panel,.block-edit,.district-index,.leaflet-popup,
+input,select,textarea{
+  --ink:#12232E;
+  --ink-2:#4E6069;
+  --line:#BFC6B9;
+  --line-2:#8E9A8C;
+  --ochre:#A8770B;
+  --ochre-ink:#7A5606;
+  --green:#0D5A4B;
+  --brick:#8A2C11;
+  --surface:var(--card);
+  color:var(--ink);
+}
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;background:var(--paper);color:var(--ink);
+  margin:0;background:var(--deep);color:var(--ink);
   font-family:var(--sans);font-size:16px;line-height:1.6;
 }
 a{color:var(--ink);text-decoration-color:var(--ochre);text-underline-offset:3px}
@@ -49,7 +69,7 @@ h2{font-size:clamp(1.5rem,3.2vw,2.1rem);letter-spacing:-.01em}
 h3{font-size:1.2rem}
 p{margin:0 0 1em}
 hr{border:0;border-top:1px solid var(--line);margin:2.5rem 0}
-code{font-family:var(--mono);font-size:.9em;background:#0000000d;padding:.1em .35em}
+code{font-family:var(--mono);font-size:.9em;background:#7f7f7f26;padding:.1em .35em}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 1.25rem}
 .eyebrow{
   font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;
@@ -61,13 +81,13 @@ code{font-family:var(--mono);font-size:.9em;background:#0000000d;padding:.1em .3
 .hidden{display:none !important}
 
 /* ---- header + tabs ---- */
-.masthead{border-bottom:1px solid var(--line-2);background:var(--paper)}
+.masthead{border-bottom:1px solid var(--line-2);background:var(--deep)}
 .masthead .wrap{display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem 1.25rem;padding-top:1.1rem;padding-bottom:.6rem}
 .brand{font-family:var(--display);font-size:1.35rem;letter-spacing:-.01em;text-decoration:none}
 .brand b{font-weight:400;border-bottom:3px solid var(--ochre)}
 .brand span{color:var(--ink-2)}
 .tagline{font-size:.82rem;color:var(--ink-2);margin-left:auto}
-nav.tabs{border-bottom:1px solid var(--line-2);background:var(--card)}
+nav.tabs{border-bottom:1px solid var(--line-2);background:var(--deep-2)}
 nav.tabs .wrap{display:flex;gap:0;overflow-x:auto;padding:0 1.25rem}
 nav.tabs a{
   font-family:var(--mono);font-size:.76rem;letter-spacing:.09em;text-transform:uppercase;
@@ -77,14 +97,42 @@ nav.tabs a{
 nav.tabs a:hover{color:var(--ink);background:#0000000a}
 nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ochre)}
 nav.tabs a .pip{
-  display:inline-block;background:var(--brick);color:var(--card);
+  display:inline-block;background:#B4441F;color:#fff;
   border-radius:99px;padding:0 .4em;margin-left:.5em;font-size:.9em;
 }
 
 main{padding:2.5rem 0 4rem;min-height:60vh}
+main.bleed{padding-top:0}
 section.slab{margin:0 0 3rem}
 
-/* ---- signature: the district index ---- */
+/* ---- start: full-screen photo with the NYCPS call for leaders ---- */
+.hero{position:relative;margin:0;min-height:calc(100vh - 7.5rem);min-height:calc(100svh - 7.5rem);
+  display:flex;align-items:flex-end;overflow:hidden;background:var(--deep-2)}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#0e2a4a1a 0%,#0e2a4a8c 45%,#0e2a4af2 100%)}
+.hero-body{position:relative;z-index:1;width:100%;padding-top:8rem;padding-bottom:2.25rem}
+.hero blockquote{margin:0;max-width:46rem}
+.hero blockquote p{font-family:var(--display);font-size:clamp(1.05rem,1.9vw,1.32rem);line-height:1.55;
+  color:#fff;text-shadow:0 1px 14px #00000059}
+.hero cite{font-style:normal;font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+.hero cite a{color:#fff}
+.hero figcaption{font-size:.74rem;color:var(--ink-2);margin-top:2rem;max-width:46rem}
+.hero figcaption a{color:var(--ink-2)}
+
+/* ---- district map ---- */
+.ssmap{height:70vh;min-height:26rem;border:1px solid var(--line-2);background:var(--deep-2)}
+.ssmap .leaflet-container{background:var(--deep-2)}
+.findd{max-width:42rem;margin:0 0 1.25rem}
+.findd .row{display:flex;gap:.5rem}
+.findd .row input{flex:1}
+.leaflet-popup-content{font-family:var(--sans);font-size:.88rem;line-height:1.45}
+.leaflet-popup-content h3{font-size:1.05rem;margin:0 0 .4rem}
+.leaflet-popup-content ul{margin:.3rem 0 .6rem;padding-left:1.1rem}
+details.dlist{margin-top:1.5rem}
+details.dlist summary{cursor:pointer;font-size:.9rem;color:var(--ink-2);margin-bottom:1rem}
+
+/* ---- the district list (under the map) ---- */
 .district-index{border:1px solid var(--line-2);background:var(--card);padding:1.25rem}
 .di-row{display:grid;grid-template-columns:7.5rem 1fr;gap:.75rem;align-items:start;padding:.55rem 0}
 .di-row + .di-row{border-top:1px solid var(--line)}
@@ -101,16 +149,26 @@ section.slab{margin:0 0 3rem}
 .cell .n{font-size:1rem}
 .cell .c{font-size:.62rem;color:var(--line-2)}
 .cell:hover{border-color:var(--ochre);color:var(--ink)}
-.cell.has{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.cell.has{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .cell.has .c{color:#ffffffb0}
 .cell.has:hover{background:var(--ochre-ink);border-color:var(--ochre-ink)}
 .cell[aria-pressed="true"]{outline:3px solid var(--ochre);outline-offset:2px}
 
-/* ---- doors ---- */
-.doors{display:grid;gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
+/* ---- doors: headers only until opened ---- */
+.doors{display:grid;gap:1rem;align-items:start}
 @media(min-width:52rem){.doors{grid-template-columns:repeat(3,1fr)}}
-.door{background:var(--card);padding:1.4rem}
-.door h3{margin-bottom:.5rem}
+.door{background:var(--card);border-left:4px solid var(--ochre)}
+.door-head{
+  font:inherit;color:inherit;background:none;border:0;cursor:pointer;width:100%;text-align:left;
+  padding:1.2rem 1.4rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.door-head:hover{background:#0000000a}
+.door-plus{font-family:var(--mono);font-size:1.3rem;line-height:1;color:var(--ochre-ink);flex:none}
+.door.open .door-plus{transform:rotate(45deg)}
+.door-body{display:grid;grid-template-rows:0fr}
+.door.open .door-body{grid-template-rows:1fr}
+.door-inner{overflow:hidden}
+.door-inner > div{padding:0 1.4rem 1.4rem}
 .door p{font-size:.94rem;color:var(--ink-2)}
 
 /* ---- buttons ---- */
@@ -119,13 +177,13 @@ section.slab{margin:0 0 3rem}
   border:1px solid var(--ink);background:transparent;color:var(--ink);
   display:inline-block;text-decoration:none;
 }
-.btn:hover{background:var(--ink);color:var(--card)}
-.btn.primary{background:var(--ochre);border-color:var(--ochre-ink);color:var(--ink);font-weight:600}
-.btn.primary:hover{background:var(--ochre-ink);color:var(--card)}
+.btn:hover{background:var(--ink);color:var(--surface)}
+.btn.primary{background:var(--ochre);border-color:var(--ochre);color:#12232E;font-weight:600}
+.btn.primary:hover{background:var(--ochre-ink);border-color:var(--ochre-ink);color:var(--surface)}
 .btn.quiet{border-color:var(--line-2);color:var(--ink-2);font-size:.82rem;padding:.35rem .7rem}
-.btn.quiet:hover{background:var(--ink-2);color:var(--card)}
+.btn.quiet:hover{background:var(--ink-2);color:var(--surface)}
 .btn.danger{border-color:var(--brick);color:var(--brick)}
-.btn.danger:hover{background:var(--brick);color:var(--card)}
+.btn.danger:hover{background:var(--brick);color:var(--surface)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .btnrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
 
@@ -150,7 +208,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   padding:.28rem .55rem;cursor:pointer;
 }
 .chip:hover{border-color:var(--ink);color:var(--ink)}
-.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .chip.static{cursor:default}
 .chip.static:hover{border-color:var(--line-2);color:var(--ink-2)}
 .taggroup{margin:0 0 .9rem}
@@ -164,7 +222,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .results-head{display:flex;flex-wrap:wrap;gap:.75rem;align-items:baseline;justify-content:space-between;border-top:2px solid var(--ink);padding-top:1rem;margin-bottom:1.25rem}
 .count{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .cards{display:grid;gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
-.pcard{background:var(--card);padding:1.15rem 1.25rem;display:block;text-decoration:none;color:inherit;border-left:4px solid transparent}
+.pcard{background:var(--card);padding:1.15rem 1.25rem;display:block;text-decoration:none;color:var(--ink);border-left:4px solid transparent}
 .pcard:hover{background:#fff;border-left-color:var(--ochre)}
 .pcard h3{margin:.15rem 0 .35rem;font-size:1.15rem}
 .pcard .snippet{font-size:.92rem;color:var(--ink-2);margin:.4rem 0 .7rem}
@@ -174,8 +232,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .kind.educator{color:var(--green)}
 .kind.concept{color:var(--brick)}
 .kind.school{color:var(--ink-2)}
-.status-pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .45rem;background:var(--brick);color:var(--card)}
-.status-pill.archived{background:var(--ink-2)}
+.status-pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .45rem;background:#8A2C11;color:#fff}
+.status-pill.archived{background:#4E6069}
 
 /* ---- empty state: the growth mechanic, not a fallback ---- */
 .empty{background:var(--card);border:1px dashed var(--line-2);padding:2rem 1.5rem;text-align:left}
@@ -197,19 +255,23 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .notice.warn{border-left-color:var(--brick)}
 .notice.good{border-left-color:var(--green)}
 .notice p:last-child{margin-bottom:0}
-.keybox{font-family:var(--mono);font-size:1.05rem;background:var(--ink);color:var(--card);padding:.6rem .8rem;display:inline-block;letter-spacing:.06em;word-break:break-all}
+.keybox{font-family:var(--mono);font-size:1.05rem;background:var(--ink);color:var(--surface);padding:.6rem .8rem;display:inline-block;letter-spacing:.06em;word-break:break-all}
 
 /* ---- admin ---- */
-.adminbar{border-top:1px solid var(--line-2);background:var(--card);margin-top:3rem}
+.adminbar{border-top:1px solid var(--line-2);margin-top:3rem}
 .adminbar .wrap{padding-top:1.25rem;padding-bottom:2rem}
 .admin-panel{border:2px solid var(--ink);background:var(--card);padding:1.25rem;margin:1rem 0}
-.admin-flag{background:var(--brick);color:var(--card);font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;display:inline-block}
+.admin-flag{background:#B4441F;color:#fff;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;display:inline-block}
 .adm-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:.6rem 0}
 .block-edit{border:1px solid var(--line-2);background:var(--card);padding:1rem;margin:0 0 1rem}
 footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.83rem;color:var(--ink-2)}
 
 @media (prefers-reduced-motion:no-preference){
-  .pcard,.cell,.btn,.chip{transition:background-color .12s ease,color .12s ease,border-color .12s ease}
+  .pcard,.cell,.btn,.chip,.door-head{transition:background-color .12s ease,color .12s ease,border-color .12s ease}
+  .door-body{transition:grid-template-rows .32s ease}
+  .door-plus{transition:transform .25s ease}
+  .view-enter{animation:view-in .3s ease-out}
+  @keyframes view-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 }
 </style>
 </head>
@@ -217,7 +279,7 @@ footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.
 
 <header class="masthead">
   <div class="wrap">
-    <a class="brand" href="#/start"><b>startaschool</b><span>.nyc</span></a>
+    <a class="brand" href="#/start"><b>StartSchool</b><span>.nyc</span></a>
     <span class="tagline">A neighbor-run board. Not affiliated with NYCPS.</span>
   </div>
 </header>
@@ -234,10 +296,11 @@ footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.
 
 <footer class="foot">
   <div class="wrap">
-    <p>startaschool.nyc is an unofficial community resource. Nothing here is legal advice or official
-    guidance from the New York City Public Schools. Process details change — check the current NYCPS
+    <p>StartSchool.nyc is an unofficial community resource. Nothing here is legal advice or official
+    guidance from the New York City Public Schools. Process details change, so check the current NYCPS
     page before you rely on anything you read here.</p>
-    <p>No analytics. No trackers. No third-party scripts.</p>
+    <p>No analytics. No trackers. The start page photo is hosted by The Sun, and the district map loads
+    its map library and tiles from outside services only when you open it.</p>
   </div>
 </footer>
 
@@ -487,8 +550,8 @@ const PII = /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})|(\+?\d[\d\s().-]{8,}\d)/i;
    3. Router
    =========================================================================== */
 const TABS = [
-  ['#/start','Start here'], ['#/board','The board'], ['#/post','Post something'],
-  ['#/guide','How it works'], ['#/about','About & privacy']
+  ['#/start','Start here'], ['#/board','The board'], ['#/map','District map'],
+  ['#/post','Post something'], ['#/guide','How it works'], ['#/about','About & privacy']
 ];
 
 function route(){
@@ -509,6 +572,8 @@ function renderTabs(){
 
 function go(hash){ location.hash = hash; }
 
+let lastView = null;   // animate only when the view changes, not on every filter re-render
+
 function render(){
   renderTabs();
   const r = route();
@@ -522,67 +587,261 @@ function render(){
   }
   if(!S.loaded){ v.innerHTML = `<div class="wrap"><p class="muted">Loading the board…</p></div>`; renderAdminBar(); return; }
 
-  const views = {start:viewStart, board:viewBoard, post:viewPost, guide:viewGuide,
+  const views = {start:viewStart, board:viewBoard, map:viewMap, post:viewPost, guide:viewGuide,
                  about:viewAbout, profile:viewProfile, edit:viewEdit, remove:viewRemove};
-  v.innerHTML = `<div class="wrap">${(views[r.name] || viewStart)(r.arg)}</div>`;
+  const fn = views[r.name] || viewStart;
+  const bleed = fn === viewStart;   // the start photo runs edge to edge
+  v.classList.toggle('bleed', bleed);
+  v.innerHTML = bleed ? fn(r.arg) : `<div class="wrap">${fn(r.arg)}</div>`;
+  const key = r.name + '/' + (r.arg || '');
+  if(key !== lastView){ v.firstElementChild.classList.add('view-enter'); lastView = key; }
   wire(r);
+  if(fn === viewMap) mountMap();
   renderAdminBar();
   if(S.flash){ S.flash = null; }
 }
 
 /* ===========================================================================
-   4. Views — public
+   4. Views: public
    =========================================================================== */
+const HERO_IMG = 'https://www.nysun.com/_next/image?url=https%3A%2F%2Fwp.nysun.com%2Fwp-content%2Fuploads%2F2026%2F05%2Fmamdani-schools-chancellor.jpg&w=1200&q=75';
+const NYCPS_NEW_SCHOOLS = 'https://infohub.nyced.org/in-our-schools/working-with-nycps/proposal-process-to-open-a-new-school-in-nyc-public-schools';
+const openDoors = new Set();
+
 function viewStart(){
+  const doors = [['start_parents','#/post','Post something'],
+                 ['start_educators','#/post','Post something'],
+                 ['start_leaders','#/board','See what is on the board']]
+    .map(([k,href,cta]) => { const b = block(k), open = openDoors.has(k); return `
+      <div class="door${open ? ' open' : ''}">
+        <button class="door-head" data-door="${k}" aria-expanded="${open}" aria-controls="door-${k}">
+          <h3>${esc(b.title)}</h3><span class="door-plus" aria-hidden="true">+</span></button>
+        <div class="door-body" id="door-${k}"${open ? '' : ' inert'}><div class="door-inner"><div>
+          ${md(b.body_md)}
+          <p><a class="btn quiet" href="${href}">${cta}</a></p>
+        </div></div></div>
+      </div>`;
+    }).join('');
+
+  return `<div>
+  <figure class="hero">
+    <img class="hero-img" src="${HERO_IMG}" alt="Schools Chancellor Kamar Samuels and Mayor Zohran Mamdani"
+      onerror="this.remove()">
+    <div class="wrap hero-body">
+      <blockquote cite="${NYCPS_NEW_SCHOOLS}">
+        <p>Chancellor Kamar H. Samuels has made reimagining the student experience one of his four pillars
+        for building trust and improving outcomes in New York City Public Schools. A key part of this vision
+        is the creation of new, high-performing, and innovative schools that redefine what’s possible for
+        students.</p>
+        <p>To bring this vision to life, we are seeking exceptional leaders with a clear, forward-thinking
+        vision for student success. Ideal candidates will have a proven track record of strong leadership,
+        instructional excellence, and the ability to cultivate a thriving school culture. These leaders will
+        be responsible for shaping the mission and vision of a new school, pioneering innovative educational
+        models, and assembling a dedicated team to build a transformative learning environment from the
+        ground up.</p>
+        <cite><a href="${NYCPS_NEW_SCHOOLS}" target="_blank" rel="noopener noreferrer">NYC Dept of Education</a></cite>
+      </blockquote>
+      <figcaption>The chancellor of New York City’s public schools, Kamar Samuels, with Mayor Zohran Mamdani
+        on March 3, 2026. Photo: Michael M. Santiago/Getty Images. Image hosted by
+        <a href="https://www.nysun.com/" target="_blank" rel="noopener noreferrer">The Sun</a>.</figcaption>
+    </div>
+  </figure>
+
+  <div class="wrap" style="padding-top:3rem">
+    <section class="slab">
+      <h2 style="margin-bottom:1.25rem">Three ways in</h2>
+      <div class="doors">${doors}</div>
+    </section>
+  </div></div>`;
+}
+
+/* ===========================================================================
+   4b. District map
+   Leaflet + Esri tiles load only when this tab is opened, so the rest of the
+   site makes no third-party requests. Boundaries are a local file
+   (districts.geojson, NYC DCP school districts, simplified).
+   =========================================================================== */
+function districtCounts(){
   const counts = {};
   S.profiles.filter(p => p.status === 'published').forEach(p => {
     if(p.district) counts[p.district] = (counts[p.district] || 0) + 1;
   });
+  return counts;
+}
+function boroughOfDistrict(d){
+  const hit = DISTRICTS.find(([b, ds]) => ds.includes(Number(d)));
+  return hit ? hit[0] : '';
+}
+
+function viewMap(){
+  const counts = districtCounts();
   const grid = DISTRICTS.map(([boro, ds]) => `
     <div class="di-row">
       <div class="di-boro">${esc(boro)}</div>
       <div class="di-cells">
         ${ds.map(d => `<button class="cell${counts[d] ? ' has' : ''}" data-district="${d}"
-            title="District ${d} — ${counts[d] || 0} posting${counts[d] === 1 ? '' : 's'}">
+            title="District ${d}: ${counts[d] || 0} posting${counts[d] === 1 ? '' : 's'}">
             <span class="n">${d}</span><span class="c">${counts[d] || '·'}</span></button>`).join('')}
       </div>
     </div>`).join('');
 
-  const doors = [['start_parents','#/post'],['start_educators','#/post'],['start_leaders','#/board']]
-    .map(([k,href]) => { const b = block(k); return `
-      <div class="door"><h3>${esc(b.title)}</h3>${md(b.body_md)}
-      <p><a class="btn quiet" href="${href}">${href === '#/board' ? 'See what is on the board' : 'Post something'}</a></p></div>`;
-    }).join('');
-
-  const total = S.profiles.filter(p => p.status === 'published').length;
+  const offMap = S.profiles.filter(p => p.status === 'published' && !p.district).length;
 
   return `
-  <section class="slab">
-    <p class="eyebrow">A community board for New York City</p>
-    <h1>Find the people who want the school you want.</h1>
-    <div class="lede" style="margin:1.25rem 0 2rem">${md(block('hero_lede').body_md)}</div>
-    <div class="btnrow">
-      <a class="btn primary" href="#/post">Post what you want</a>
-      <a class="btn" href="#/board">Browse ${total} posting${total === 1 ? '' : 's'}</a>
-    </div>
-  </section>
-
-  <section class="slab">
+  <section class="slab" style="margin-bottom:1.5rem">
     <p class="eyebrow">Start where you live · 32 community school districts</p>
-    <h2>The district index</h2>
-    <p class="muted" style="max-width:52ch;margin:.75rem 0 1.25rem">
+    <h2>The district map</h2>
+    <p class="muted" style="max-width:56ch;margin:.75rem 0 1.25rem">
       NYCPS is organized into 32 community school districts, and that is the unit that matters:
       it is who your superintendent is, which Community Education Council you can show up to, and
-      who counts as your neighbor for this purpose. Filled squares have postings. Empty ones are
+      who counts as your neighbor for this purpose. Shaded districts have postings. The rest are
       waiting for someone.</p>
-    <div class="district-index">${grid}</div>
+    <form class="findd" id="findd">
+      <label for="faddr">Find your district</label>
+      <div class="row"><input type="text" id="faddr" placeholder="Street address or ZIP code" autocomplete="street-address">
+        <button class="btn" type="submit">Find</button></div>
+      <p class="help small muted" style="margin:.35rem 0 0">Your address is sent to OpenStreetMap's free
+        geocoder to place it on the map. This site never stores it.</p>
+      <p id="fout" class="small" style="margin:.5rem 0 0" aria-live="polite"></p>
+    </form>
   </section>
-
-  <section class="slab">
-    <h2 style="margin-bottom:1.25rem">Three ways in</h2>
-    <div class="doors">${doors}</div>
-  </section>`;
+  <div id="ssmap" class="ssmap" role="region" aria-label="Map of NYC community school districts"></div>
+  ${offMap ? `<p class="small muted" style="margin-top:.75rem">${offMap} posting${offMap === 1 ? ' is' : 's are'}
+    citywide or only name a borough, so ${offMap === 1 ? 'it is' : 'they are'} not on the map.
+    <a href="#/board">See everything on the board</a>.</p>` : ''}
+  <details class="dlist">
+    <summary>Or pick a district from a list</summary>
+    <div class="district-index">${grid}</div>
+  </details>`;
 }
+
+let leafletReady = null, districtGeo = null, mapObj = null;
+
+function loadLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(!leafletReady) leafletReady = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload = resolve;
+    js.onerror = () => { leafletReady = null; reject(new Error('The map library did not load.')); };
+    document.head.appendChild(js);
+  });
+  return leafletReady;
+}
+
+async function loadDistricts(){
+  if(!districtGeo){
+    const res = await fetch('districts.geojson');
+    if(!res.ok) throw new Error('District boundaries did not load.');
+    districtGeo = await res.json();
+  }
+  return districtGeo;
+}
+
+function districtStyle(d, counts, found){
+  const n = counts[d] || 0;
+  const base = n
+    ? {fillColor:'#E0AE34', fillOpacity:Math.min(.3 + n * .1, .7), color:'#E0AE34', weight:1.5}
+    : {fillColor:'#ffffff', fillOpacity:.04, color:'#ffffff8c', weight:.8};
+  return d === found ? Object.assign(base, {color:'#ffffff', weight:3}) : base;
+}
+
+function districtPopup(d){
+  const posts = S.profiles.filter(p => p.status === 'published' && Number(p.district) === d);
+  const list = posts.slice(0,6).map(p => `<li><a href="#/profile/${esc(p.id)}">${esc(p.title)}</a></li>`).join('');
+  return `<h3>District ${d}</h3><p class="small muted" style="margin:0">${esc(boroughOfDistrict(d))}</p>
+    ${posts.length ? `<ul>${list}</ul>` : '<p style="margin:.5rem 0">Nobody has posted here yet.</p>'}
+    <a class="btn quiet" href="${posts.length ? '#/board' : '#/post'}" data-popdist="${posts.length ? d : ''}">
+      ${posts.length ? `See ${posts.length === 1 ? 'it' : 'all ' + posts.length} on the board` : 'Be the first'}</a>`;
+}
+
+// Even-odd ray cast across every ring, so holes and islands both work.
+function inRing(pt, ring){
+  let inside = false;
+  for(let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function districtAt(lng, lat){
+  for(const f of districtGeo.features){
+    const g = f.geometry, polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    if(polys.some(rings => rings.reduce((acc, r) => acc !== inRing([lng, lat], r), false))) return f.properties.district;
+  }
+  return null;
+}
+
+async function mountMap(){
+  const el = document.getElementById('ssmap');
+  try{ await Promise.all([loadLeaflet(), loadDistricts()]); }
+  catch(e){
+    el.innerHTML = `<div class="notice warn" style="margin:1rem"><p>${esc(e.message)} The list below
+      still works.</p></div>`;
+    return;
+  }
+  if(!document.body.contains(el)) return;   // navigated away while loading
+  if(mapObj) mapObj.remove();
+
+  const counts = districtCounts();
+  let found = null, pin = null;
+  mapObj = L.map(el, {scrollWheelZoom:false, zoomSnap:.25});
+  // Esri Dark Gray Canvas (no key). Street labels sit above the district shading.
+  const esri = 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+  L.tileLayer(esri + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution:'Tiles © <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, © OpenStreetMap contributors · Districts: NYC DCP',
+    maxZoom:16
+  }).addTo(mapObj);
+  mapObj.createPane('labels');
+  mapObj.getPane('labels').style.zIndex = 450;
+  mapObj.getPane('labels').style.pointerEvents = 'none';
+  L.tileLayer(esri + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {pane:'labels', maxZoom:16}).addTo(mapObj);
+
+  const layer = L.geoJSON(districtGeo, {
+    style: f => districtStyle(f.properties.district, counts, found),
+    onEachFeature: (f, lyr) => {
+      const d = f.properties.district;
+      lyr.bindTooltip('District ' + d, {sticky:true, direction:'top'});
+      lyr.bindPopup(() => districtPopup(d), {maxWidth:260});
+      lyr.on('mouseover', () => lyr.setStyle({fillOpacity:counts[d] ? .6 : .14}));
+      lyr.on('mouseout', () => layer.resetStyle(lyr));
+    }
+  }).addTo(mapObj);
+  mapObj.fitBounds(layer.getBounds(), {padding:[12,12]});
+
+  document.getElementById('findd').addEventListener('submit', async e => {
+    e.preventDefault();
+    const out = document.getElementById('fout');
+    const q = document.getElementById('faddr').value.trim();
+    if(!q) return;
+    out.textContent = 'Looking that up…';
+    try{
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us' +
+        '&viewbox=-74.26,40.92,-73.69,40.49&bounded=1&q=' + encodeURIComponent(q + ', New York City'),
+        {referrerPolicy:'origin'});
+      const hit = (await res.json())[0];
+      const d = hit && districtAt(Number(hit.lon), Number(hit.lat));
+      if(!d){ out.textContent = 'Could not place that address in a NYC school district. Try adding the borough or ZIP code.'; return; }
+      found = d;
+      layer.setStyle(f => districtStyle(f.properties.district, counts, found));
+      if(pin) pin.remove();
+      pin = L.circleMarker([hit.lat, hit.lon], {radius:6, color:'#fff', weight:2, fillColor:'#B4441F', fillOpacity:1}).addTo(mapObj);
+      const lyr = layer.getLayers().find(l => l.feature.properties.district === d);
+      mapObj.flyToBounds(lyr.getBounds(), {padding:[30,30], duration:.6});
+      lyr.openPopup();
+      out.textContent = `That address is in District ${d} (${boroughOfDistrict(d)}).`;
+    }catch(err){ out.textContent = 'The address lookup is not responding right now. Try the list below.'; }
+  });
+}
+
+// Popup links set the board's district filter on their way there.
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-popdist]');
+  if(a && a.dataset.popdist) S.filters = {type:'', borough:'', district:a.dataset.popdist, tags:[], q:''};
+});
 
 function filterProfiles(){
   const f = S.filters;
@@ -683,7 +942,7 @@ function emptyHtml(){
   const phrase = bits.length ? bits.join(', ') : 'these filters';
   return `<div class="empty">
     <h3>Nobody has posted ${bits.length ? 'about ' + esc(phrase) : 'anything matching this'} yet.</h3>
-    <p>That is not a dead end — it is the most useful thing this site can tell you. A school gets
+    <p>That is not a dead end: it is the most useful thing this site can tell you. A school gets
     built when demand becomes visible, and right now this corner of the board is invisible.
     Be the first posting here and give the next person something to find.</p>
     <p style="margin-top:1.25rem"><a class="btn primary" href="#/post">Be the first</a></p>
@@ -739,7 +998,7 @@ function viewProfile(id){
     ${tags.length ? `<div class="chips" style="margin-top:1.25rem">${tags.map(t => `<span class="chip static">${esc(tagLabel(t))}</span>`).join('')}</div>` : ''}
     ${links ? `<h3 style="margin:2rem 0 .25rem">Connected to</h3>${links}` : ''}
     <div class="notice" style="margin-top:2rem"><p class="small">There is no contact address on this page,
-    by design. If you want to reach this person, post your own and mention them — the site's operator makes
+    by design. If you want to reach this person, post your own and mention them. The site's operator makes
     introductions when both sides have said they are open to it.</p></div>
   </div>
   ${adminExtras}`;
@@ -799,7 +1058,7 @@ function viewPost(){
       <input type="text" id="pname" maxlength="80" value="${esc(draft.display_name || '')}"
         placeholder="Nadia in Sunset Park, M.R., District 15 dad…">
       <p class="help">This is how people will recognise you on the board, so pick something you would answer
-      to — a first name and a neighborhood works well. Initials or a nickname are completely fine.
+      to (a first name and a neighborhood works well). Initials or a nickname are completely fine.
       <strong>If you teach, do not use your full name and do not name your school.</strong> A public post
       about wanting to leave is readable by your principal.</p>
     </div>
@@ -829,7 +1088,7 @@ function viewPost(){
       ${DISTRICTS.flatMap(([b,ds]) => ds).sort((a,b) => a-b)
         .map(d => `<option value="${d}"${String(draft.district) === String(d) ? ' selected' : ''}>District ${d}</option>`).join('')}
       </select>
-      <p class="help">If you do not know yours, leave it blank — it is on the district index on the start page.</p>
+      <p class="help">If you do not know yours, leave it blank, or look it up on the <a href="#/map">district map</a>.</p>
     </div>
 
     <div class="field">
@@ -845,7 +1104,7 @@ function viewPost(){
       <p><strong>Before you post, two things.</strong></p>
       <p>Everything above is <strong>public</strong>. Anyone who opens this site can read it, including
       people you know.</p>
-      <p>Never include a child's name, birthdate, current school, or photo — here or anywhere on this site.</p>
+      <p>Never include a child's name, birthdate, current school, or photo, here or anywhere on this site.</p>
     </div>
 
     <div class="field">
@@ -853,7 +1112,7 @@ function viewPost(){
       <input type="text" id="pcontact" maxlength="200" value="" placeholder="Optional">
       <p class="help">This one field is <strong>not</strong> public. It is stored where only the site's
       operator can read it, and it is used to introduce you to someone when there is someone to introduce
-      you to. Leave it blank and your posting still works — people can reply by posting their own.</p>
+      you to. Leave it blank and your posting still works: people can reply by posting their own.</p>
     </div>
 
     <div id="piiwarn"></div>
@@ -929,7 +1188,7 @@ async function submitPosting(){
       <div class="notice good" style="max-width:44rem">
         <h2 style="margin-bottom:.5rem">Posted.</h2>
         <p>A person reads every posting before it appears on the board, so give it a day or two.</p>
-        <p><strong>This is your deletion key. Copy it now — it is shown once and never again.</strong></p>
+        <p><strong>This is your deletion key. Copy it now: it is shown once and never again.</strong></p>
         <p><span class="keybox">${esc(key)}</span></p>
         <p class="small">It is the only way to remove your posting yourself. Keep it somewhere you will find it.
         If you lose it, you will have to ask the operator.</p>
@@ -987,7 +1246,7 @@ function renderAdminBar(){
           <button class="btn quiet" id="atoggleblocks">Edit page copy</button>
           <button class="btn quiet" id="asignout">Sign out</button>
         </div>
-        <h3>Waiting for review — ${pend.length}</h3>
+        <h3>Waiting for review (${pend.length})</h3>
         ${pend.length ? pend.map(p => `
           <div class="adm-row">
             <span><a href="#/profile/${esc(p.id)}">${esc(p.title)}</a>
@@ -1030,7 +1289,7 @@ function adminProfileExtras(p){
       const out = c.from_profile === p.id;
       const other = profileById(out ? c.to_profile : c.from_profile);
       return `<div class="adm-row"><span><span class="rel">${esc(out ? RELATIONS[c.relation] : '← ' + RELATIONS[c.relation])}</span>
-        ${esc(other ? other.title : '(missing)')} ${c.note ? `<span class="small muted">— ${esc(c.note)}</span>` : ''}</span>
+        ${esc(other ? other.title : '(missing)')} ${c.note ? `<span class="small muted">· ${esc(c.note)}</span>` : ''}</span>
         <button class="btn quiet" data-unlink="${esc(c.id)}">Unlink</button></div>`;
     }).join('') : '<p class="small muted">No connections yet.</p>'}
     <div style="margin-top:1rem;display:grid;gap:.6rem;max-width:34rem">
@@ -1122,7 +1381,16 @@ function on(sel, ev, fn, root){ (root || document).querySelectorAll(sel).forEach
 function wire(r){
   const V = document.getElementById('view');
   const on = (sel, ev, fn) => V.querySelectorAll(sel).forEach(el => el.addEventListener(ev, fn));
-  // start page — district cells
+  // start page: open and close the doors
+  on('.door-head','click', e => {
+    const btn = e.currentTarget, door = btn.closest('.door'), k = btn.dataset.door;
+    const open = door.classList.toggle('open');
+    open ? openDoors.add(k) : openDoors.delete(k);
+    btn.setAttribute('aria-expanded', String(open));
+    door.querySelector('.door-body').inert = !open;
+  });
+
+  // district map: the list of district cells
   on('.cell','click', e => {
     const d = e.currentTarget.dataset.district;
     S.filters = {type:'', borough:'', district:d, tags:[], q:''};
@@ -1170,7 +1438,7 @@ function wire(r){
       const ok = await db.removeByKey(key);
       out.innerHTML = ok
         ? `<div class="notice good"><p>Removed. It is gone from the board and from the database, along with any email address you gave.</p></div>`
-        : `<div class="notice warn"><p>No posting matches that key. Check for a typo — keys are 18 characters, digits and the letters a to f.</p></div>`;
+        : `<div class="notice warn"><p>No posting matches that key. Check for a typo: keys are 18 characters, digits and the letters a to f.</p></div>`;
       if(ok) await reload();
     }catch(err){ out.innerHTML = `<div class="notice warn"><p>${esc(err.message)}</p></div>`; }
   });
@@ -1311,8 +1579,8 @@ async function saveEdit(typeChangeOnly){
 function toast(msg, bad){
   const el = document.createElement('div');
   el.textContent = msg;
-  el.style.cssText = 'position:fixed;left:1rem;bottom:1rem;z-index:99;padding:.7rem 1rem;font-size:.9rem;' +
-    'background:' + (bad ? 'var(--brick)' : 'var(--ink)') + ';color:var(--card);max-width:24rem';
+  el.style.cssText = 'position:fixed;left:1rem;bottom:1rem;z-index:1500;padding:.7rem 1rem;font-size:.9rem;' +
+    'background:' + (bad ? '#8A2C11' : '#F4F6F0') + ';color:' + (bad ? '#fff' : '#12232E') + ';max-width:24rem';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 4000);
 }
