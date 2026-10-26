@@ -120,7 +120,13 @@ section.slab{margin:0 0 3rem}
              linear-gradient(270deg,#0e2a4a8c 0%,transparent 60%)}
 .hero-body{position:relative;z-index:1;width:100%;padding-top:8rem;padding-bottom:2.25rem;
   display:flex;flex-direction:column;align-items:flex-end;text-align:right}
-.hero blockquote{margin:0;max-width:46rem}
+.hero blockquote{margin:0;max-width:46rem;position:relative}
+/* the big decorative open quote, hung off the quote's top-left corner */
+.hero blockquote::before{
+  content:"“";position:absolute;left:-.1em;top:-.4em;
+  font-family:var(--display);font-size:clamp(13rem,26vw,22rem);line-height:1;
+  color:var(--ochre);opacity:.85;text-shadow:0 2px 18px #0000004d;pointer-events:none;
+}
 .hero blockquote p{font-family:var(--display);font-size:clamp(1.05rem,1.9vw,1.32rem);line-height:1.55;
   color:#fff;text-shadow:0 1px 14px #00000059}
 .hero cite{font-style:normal;font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
@@ -241,8 +247,8 @@ main.cork{
 main.cork .wrap{max-width:84rem}
 @media(max-width:40rem){main.cork{border-width:8px}}
 .hand{font-family:var(--hand);font-weight:700}
-.bb-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1.25rem;margin:0 0 1.25rem}
-.bb-head h2{font-size:clamp(2.5rem,5vw,3.5rem);line-height:1;color:#3b2610;margin-right:auto}
+.bb-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:.5rem 1.25rem;margin:0 0 1rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 main.cork .count{color:#4a3218}
 main.cork .btn.quiet{background:#f4f6f0d9;border-color:var(--frame);color:#3b2610}
 main.cork .btn.quiet:hover{background:#3b2610;color:#fff}
@@ -335,6 +341,7 @@ main.cork .btn.quiet:hover{background:#3b2610;color:#fff}
 .adminbar .wrap{padding-top:1.25rem;padding-bottom:2rem}
 .admin-panel{border:2px solid var(--ink);background:var(--card);padding:1.25rem;margin:1rem 0}
 .admin-flag{background:#B4441F;color:#fff;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .5rem;display:inline-block}
+.sugg.done{opacity:.7}
 .adm-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:.6rem 0}
 .block-edit{border:1px solid var(--line-2);background:var(--card);padding:1rem;margin:0 0 1rem}
 footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.83rem;color:var(--ink-2)}
@@ -388,7 +395,7 @@ footer.foot{border-top:1px solid var(--line-2);padding:1.5rem 0 3rem;font-size:.
    Talks to Supabase's PostgREST endpoint with plain fetch. No SDK, no CDN,
    no third-party script. Swapping backends means rewriting this block only.
    Lives in the site-wide joeyd_main project; every table here is prefixed
-   start_school_. Operators are whoever public.app_access lets use 'start_school'.
+   start_school_. Admins are whoever public.app_access lets use 'start_school'.
    =========================================================================== */
 const CFG = {
   url: 'https://fbixruzebizpcxmaysnc.supabase.co',
@@ -398,7 +405,7 @@ const CFG = {
 
 /* sessionStorage is unavailable in sandboxed previews and throws rather than
    returning null, which would take the whole page down. Degrade to in-memory:
-   the operator just gets signed out on reload. */
+   the admin just gets signed out on reload. */
 const safeStore = (() => {
   let mem = {};
   const ok = (() => { try { sessionStorage.setItem('__t','1');
@@ -412,14 +419,14 @@ const safeStore = (() => {
 
 const S = {
   profiles: [], tags: [], connections: [], blocks: [],
-  contacts: {}, notes: {},
+  contacts: {}, notes: {}, suggestions: [],
   token: null,
   filters: { type:'', borough:'', district:'', tags:[], q:'' },
   loaded: false, error: null, flash: null
 };
 
-/* Operator session: access token + refresh token, kept in this tab only.
-   S.token is set only while signed in as an operator. */
+/* Admin session: access token + refresh token, kept in this tab only.
+   S.token is set only while signed in as an admin. */
 let session = (() => { try { return JSON.parse(safeStore.get('sas_session')); } catch(e){ return null; } })();
 S.token = session ? session.access_token : null;
 
@@ -504,19 +511,22 @@ const db = {
   saveBlock(row){ return rest('start_school_content_blocks?key=eq.' + encodeURIComponent(row.key), {method:'PATCH', body:row}); },
   newBlock(row){ return rest('start_school_content_blocks', {method:'POST', body:row, prefer:'return=representation'}); },
   loadPrivate(){
-    return Promise.all([ rest('start_school_private_contacts?select=*'), rest('start_school_admin_notes?select=*') ]);
+    return Promise.all([ rest('start_school_private_contacts?select=*'), rest('start_school_admin_notes?select=*'),
+      rest('start_school_suggestions?select=*&order=created_at.desc') ]);
   },
+  markSuggestion(id, reviewed){ return rest('start_school_suggestions?id=eq.' + id, {method:'PATCH', body:{reviewed}}); },
+  deleteSuggestion(id){ return rest('start_school_suggestions?id=eq.' + id, {method:'DELETE'}); },
   saveNote(id, note){
     return rest('start_school_admin_notes', {method:'POST', body:{profile_id:id, note, updated_at:new Date().toISOString()},
       prefer:'resolution=merge-duplicates'});
   },
-  isOperator(){ return rest('rpc/can_use_app', {method:'POST', body:{app_name:CFG.app}}); },
-  // Any site account can sign in; only operators get to stay signed in here.
+  isAdmin(){ return rest('rpc/can_use_app', {method:'POST', body:{app_name:CFG.app}}); },
+  // Any site account can sign in; only admins get to stay signed in here.
   async signIn(email, password){
     setSession(await authToken('password', {email, password}));
-    if(!(await db.isOperator())){
+    if(!(await db.isAdmin())){
       await db.signOut();
-      throw new Error('That account is not an operator for this site.');
+      throw new Error('That account is not an admin for this site.');
     }
   },
   async signOut(){
@@ -669,7 +679,7 @@ function render(){
   }
   if(!S.loaded){ v.innerHTML = `<div class="wrap"><p class="muted">Loading…</p></div>`; renderAdminBar(); return; }
 
-  const views = {start:viewStart, board:viewBoard, map:viewMap, post:viewPost, guide:viewGuide,
+  const views = {start:viewStart, board:viewBoard, map:viewMap, post:viewPost, guide:viewGuide, suggestions:viewSuggestions,
                  about:viewAbout, edit:viewEdit, remove:viewRemove};
   const fn = views[r.name] || viewStart;
   const bleed = fn === viewStart;   // the start photo runs edge to edge
@@ -725,8 +735,8 @@ function viewStart(){
         instructional excellence, and the ability to cultivate a thriving school culture. These leaders will
         be responsible for shaping the mission and vision of a new school, pioneering innovative educational
         models, and assembling a dedicated team to build a transformative learning environment from the
-        ground up.</p>
-        <cite><a href="${NYCPS_NEW_SCHOOLS}" target="_blank" rel="noopener noreferrer">NYC Dept of Education</a></cite>
+        ground up.”</p>
+        <cite>- <a href="${NYCPS_NEW_SCHOOLS}" target="_blank" rel="noopener noreferrer">NYC Dept of Education</a></cite>
       </blockquote>
       <figcaption>The chancellor of New York City’s public schools, Kamar Samuels, with Mayor Zohran Mamdani
         on March 3, 2026. Photo: Michael M. Santiago/Getty Images. Image hosted by
@@ -1024,8 +1034,8 @@ function viewBoard(arg){
   const total = filterProfiles().length;
 
   const head = `
+  <h2 class="sr-only">Bulletin Board</h2>
   <div class="bb-head">
-    <h2 class="hand">The Bulletin Board</h2>
     <span class="count">${total} posting${total === 1 ? '' : 's'}${active ? ' matching' : ''}</span>
     <a class="btn quiet" href="#/post">Add yours</a>
   </div>
@@ -1074,7 +1084,7 @@ function emptyHtml(){
   </div>`;
 }
 
-// An opened note, plus the operator tools under it when signed in.
+// An opened note, plus the admin tools under it when signed in.
 function sheetCol(p, open){
   const fresh = !lastOpen.includes(p.id);
   return `<div class="bb-col">${sheetHtml(p, open, fresh)}${S.token ? adminProfileExtras(p) : ''}</div>`;
@@ -1124,7 +1134,7 @@ function sheetHtml(p, open, fresh){
     ${tags.length ? `<div class="chips" style="margin-top:1.25rem">${tags.map(t => `<span class="chip static">${esc(tagLabel(t))}</span>`).join('')}</div>` : ''}
     ${links ? `<h3 style="margin:2rem 0 .25rem">Connected to</h3>${links}` : ''}
     <p class="small muted" style="margin-top:1.75rem">There is no contact address on this note, by design.
-    If you want to reach this person, post your own and mention them. The site's operator makes
+    If you want to reach this person, post your own and mention them. The site's admin makes
     introductions when both sides have said they are open to it.</p>
   </article>`;
 }
@@ -1253,7 +1263,7 @@ function viewPost(){
       <label for="pcontact">An email address, if you want an introduction</label>
       <input type="text" id="pcontact" maxlength="200" value="" placeholder="Optional">
       <p class="help">This one field is <strong>not</strong> public. It is stored where only the site's
-      operator can read it, and it is used to introduce you to someone when there is someone to introduce
+      admin can read it, and it is used to introduce you to someone when there is someone to introduce
       you to. Leave it blank and your posting still works: people can reply by posting their own.</p>
     </div>
 
@@ -1333,7 +1343,7 @@ async function submitPosting(){
         <p><strong>This is your deletion key. Copy it now: it is shown once and never again.</strong></p>
         <p><span class="keybox">${esc(key)}</span></p>
         <p class="small">It is the only way to remove your posting yourself. Keep it somewhere you will find it.
-        If you lose it, you will have to ask the operator.</p>
+        If you lose it, you will have to ask the admin.</p>
         <p style="margin-top:1.25rem"><a class="btn quiet" href="#/board">Go to the Bulletin Board</a></p>
       </div>`;
     draft = {type:'interest', tags:[], details:{}};
@@ -1367,7 +1377,7 @@ function renderAdminBar(){
   if(!S.token){
     el.innerHTML = `
       <details id="admindet">
-        <summary class="small muted" style="cursor:pointer">Operator sign-in</summary>
+        <summary class="small muted" style="cursor:pointer">Admin sign-in</summary>
         <div class="admin-panel" style="max-width:26rem">
           <div class="field"><label for="aemail">Email</label><input type="email" id="aemail" autocomplete="username"></div>
           <div class="field"><label for="apass">Password</label><input type="password" id="apass" autocomplete="current-password"></div>
@@ -1379,12 +1389,14 @@ function renderAdminBar(){
       </details>`;
   } else {
     const pend = S.profiles.filter(p => p.status === 'pending');
+    const fresh = S.suggestions.filter(x => !x.reviewed).length;
     el.innerHTML = `
-      <p><span class="admin-flag">Signed in as operator</span></p>
+      <p><span class="admin-flag">Signed in as admin</span></p>
       <div class="admin-panel">
         <div class="btnrow" style="margin-bottom:1rem">
           <a class="btn quiet" href="#/edit/new">New profile</a>
           <a class="btn quiet" href="#/board">Board (pending postings visible)</a>
+          <a class="btn quiet" href="#/suggestions">Suggestions${fresh ? ` (${fresh} new)` : ''}</a>
           <button class="btn quiet" id="atoggleblocks">Edit page copy</button>
           <button class="btn quiet" id="asignout">Sign out</button>
         </div>
@@ -1405,6 +1417,35 @@ function renderAdminBar(){
   wireAdminBar();
 }
 
+/* ===========================================================================
+   6b. Suggestions (admins only). Sent from the About page.
+   =========================================================================== */
+function viewSuggestions(){
+  if(!S.token) return `<div class="notice warn"><p>Sign in as an admin at the bottom of the page to read suggestions.</p></div>`;
+  const when = t => new Date(t).toLocaleString('en-US', {timeZone:'America/New_York', dateStyle:'medium', timeStyle:'short'});
+  const row = x => `
+    <div class="admin-panel sugg${x.reviewed ? ' done' : ''}">
+      <div class="meta" style="margin-bottom:.6rem"><span>${esc(when(x.created_at))}</span>
+        ${x.reviewed ? '<span>Reviewed</span>' : '<span class="status-pill">New</span>'}
+        ${x.reply_to ? `<span>Reply to <a href="mailto:${esc(x.reply_to)}" style="text-transform:none;letter-spacing:0">${esc(x.reply_to)}</a></span>` : '<span>No reply address</span>'}</div>
+      <div class="prose">${md(x.message)}</div>
+      <div class="btnrow" style="margin-top:.75rem">
+        <button class="btn quiet" data-sreview="${esc(x.id)}" data-to="${!x.reviewed}">${x.reviewed ? 'Mark as new' : 'Mark reviewed'}</button>
+        <button class="btn quiet" data-sdel="${esc(x.id)}">Delete</button>
+      </div>
+    </div>`;
+  const fresh = S.suggestions.filter(x => !x.reviewed), done = S.suggestions.filter(x => x.reviewed);
+  return `
+  <section class="slab" style="max-width:46rem">
+    <p class="eyebrow">Admin only</p>
+    <h2>Suggestions and questions</h2>
+    <p class="muted" style="margin-top:.75rem">Sent from the About page. Never shown publicly.</p>
+    <h3 style="margin:2rem 0 .5rem">New (${fresh.length})</h3>
+    ${fresh.length ? fresh.map(row).join('') : '<p class="small muted">Nothing new.</p>'}
+    ${done.length ? `<h3 style="margin:2rem 0 .5rem">Reviewed (${done.length})</h3>${done.map(row).join('')}` : ''}
+  </section>`;
+}
+
 function adminProfileExtras(p){
   const contact = S.contacts[p.id];
   const note = S.notes[p.id] || '';
@@ -1412,7 +1453,7 @@ function adminProfileExtras(p){
   const mine = S.connections.filter(c => c.from_profile === p.id || c.to_profile === p.id);
   return `
   <div class="admin-panel" data-pid="${esc(p.id)}">
-    <p><span class="admin-flag">Operator only</span></p>
+    <p><span class="admin-flag">Admin only</span></p>
     <div class="btnrow" style="margin:1rem 0">
       <a class="btn quiet" href="#/edit/${esc(p.id)}">Edit this profile</a>
       ${p.status !== 'published' ? `<button class="btn quiet" data-pub="${esc(p.id)}">Publish</button>` : ''}
@@ -1609,6 +1650,18 @@ function wire(r){
     }catch(err){ out.innerHTML = `<div class="notice warn"><p>${esc(err.message)}</p></div>`; }
   });
 
+  // admin: suggestions
+  on('[data-sreview]','click', async e => {
+    const b = e.currentTarget;
+    try{ await db.markSuggestion(b.dataset.sreview, b.dataset.to === 'true'); await reload(); render(); }
+    catch(err){ toast('Could not update: ' + err.message, true); }
+  });
+  on('[data-sdel]','click', async e => {
+    if(!confirm('Delete this suggestion permanently?')) return;
+    try{ await db.deleteSuggestion(e.currentTarget.dataset.sdel); await reload(); render(); }
+    catch(err){ toast(err.message, true); }
+  });
+
   // admin: profile extras
   on('.savenote','click', async e => {
     const box = e.currentTarget.closest('[data-pid]');
@@ -1664,7 +1717,7 @@ function wireAdminBar(){
   const so = document.getElementById('asignout');
   if(so) so.addEventListener('click', async () => {
     await db.signOut();
-    S.contacts = {}; S.notes = {};
+    S.contacts = {}; S.notes = {}; S.suggestions = [];
     await reload(); render();
   });
   const tb = document.getElementById('atoggleblocks');
@@ -1724,7 +1777,7 @@ async function saveEdit(typeChangeOnly){
     if(el.getAttribute('aria-pressed') === 'true') details[k].push(el.dataset.val);
   });
   const row = {
-    type:g('e_type'), status:g('e_status'), display_name:g('e_name').trim() || 'Operator',
+    type:g('e_type'), status:g('e_status'), display_name:g('e_name').trim() || 'Admin',
     title:g('e_title').trim(), body:g('e_body'), public_notes:g('e_public'),
     borough:g('e_boro') || null, district:g('e_dist') ? Number(g('e_dist')) : null,
     neighborhood:g('e_neigh').trim() || null, verified_at:g('e_ver') || null,
@@ -1757,14 +1810,15 @@ function toast(msg, bad){
    =========================================================================== */
 async function reload(){
   try{
-    // A stored session whose refresh failed, or whose operator access was removed, signs out quietly.
-    if(S.token){ try{ if(!(await db.isOperator())) await db.signOut(); }catch(e){ await db.signOut(); } }
+    // A stored session whose refresh failed, or whose admin access was removed, signs out quietly.
+    if(S.token){ try{ if(!(await db.isAdmin())) await db.signOut(); }catch(e){ await db.signOut(); } }
     const [profiles, tags, connections, blocks] = await db.loadPublic();
     S.profiles = profiles; S.tags = tags; S.connections = connections; S.blocks = blocks;
     S.error = null;
     if(S.token){
       try{
-        const [contacts, notes] = await db.loadPrivate();
+        const [contacts, notes, suggestions] = await db.loadPrivate();
+        S.suggestions = suggestions;
         S.contacts = Object.fromEntries(contacts.map(c => [c.profile_id, c]));
         S.notes = Object.fromEntries(notes.map(n => [n.profile_id, n.note]));
       }catch(e){ /* session expired or no rows; not fatal */ }
